@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.pyc
+*.pyo
+*.so
+*.class
