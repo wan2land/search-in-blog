@@ -12,7 +12,12 @@ my_table = conn.selectTable('testdocs')
 
 start  = int(round(time.time() * 1000))
 
-print my_table.searchByText('소나무는 동구스 밥버거')
+print my_table.searchByText('소나무 동구스 밥버거')
+
+my_table.removeDocument(5)
+
+print my_table.searchByText('소나무 동구스 밥버거')
+
 
 print 'running time : ' + str( float( int(round(time.time() * 1000)) - start ) / 1000 )
 

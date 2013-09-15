@@ -112,6 +112,15 @@ class SnbTable :
 
 		self.connector.commit()
 
+	def removeDocument(self, idx) :
+
+		c = self.connector.cursor()
+
+		c.execute("""DELETE FROM `{}` WHERE `idx` = %s""".format( self.name ), (idx, ))
+		c.execute("""DELETE FROM `{}` WHERE `document_idx` = %s""".format( self.prefix + self.name + '_idxp' ), (idx, ))
+
+		self.connector.commit()
+
 	def searchByWord(self, word) :
 		c = self.connector.cursor()
 		c.execute("""SELECT `document_idx` FROM `{}` where `word_idx` in (select `idx` from `{}` where `word` = %s)""".format( self.prefix + self.name + '_idxp', self.prefix + self.name + '_idx'), (word, ))
