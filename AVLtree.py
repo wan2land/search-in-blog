@@ -1,6 +1,10 @@
 # -*- coding:utf-8 -*-
 #AVL Tree
+"""
+height(), balence() 는 height 로 변수로 사용할 수 있도록 처리해야합니다.
+delete()가 구현되어있지 않음.
 
+"""
 class AVLTreeNode :
 
 	def __init__(self, value) :		
