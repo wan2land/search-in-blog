@@ -143,7 +143,7 @@ class AVLTree :
 			if len(stack) == 0 : # Root Node가 변했다는 뜻!! -_-!!
 				self.root = pNewNode
 			else :
-				pParentNode = stack[ len(stack) - 1 ]
+				pParentNode = stack[- 1]
 				if pParentNode.child_left == pNode :
 					pParentNode.child_left = pNewNode
 				else :
@@ -173,7 +173,7 @@ if __name__ == "__main__" :
 	import random
 	x = AVLTree()
 	for i in range(0,10) :
-		x.insert( random.randint(0, 10000000) )
+		x.insert( random.randint(0, 100) )
 	
 	print x	
 

@@ -143,3 +143,20 @@ class SnbTable :
 
 def connect(**args) :
 	return SnbConnector(**args)
+
+
+
+if __name__ == "__main__" :
+	import time
+
+	conn = connect(host = "localhost", user="root", password="root", database="siblo")
+
+	my_table = conn.selectTable('testdocs')
+	my_table.addDocument("동해물과 백두산이 마르고 닳도록")
+	my_table.addDocument("남삼위에 저 소나무 철갑을 두른듯")
+	my_table.addDocument("가을하늘 공활한데 높고 구름 없이")
+	my_table.addDocument("이 기상과 이 맘으로 충성을 다하여")
+
+
+	print my_table.searchByText("동해물과")
+
