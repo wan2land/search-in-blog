@@ -52,7 +52,8 @@ class Rect :
 		)
 
 def multiRectArea(rect1, rect2) :
-	return rect1.union( rect2 ).area()
+	return abs( ( max(rect1.max_x, rect2.max_x) - min(rect1.min_x, rect2.min_x) ) * \
+			( max(rect1.max_y, rect2.max_y) - min(rect1.min_y, rect2.min_y) ) )
 
 
 
@@ -75,6 +76,7 @@ class RTreeNode :
 				str(self.mbb.min_y) + ',' + \
 				str(self.mbb.max_x) + ',' + \
 				str(self.mbb.max_y) + '>'
+
 	def height(self) :
 
 		if self.child_left is None or isinstance(self.child_left, RTreeLeaf) :
@@ -105,11 +107,15 @@ class RTreeNode :
 
 class RTreeLeaf(RTreeNode) :
 
-	def __init__(self, mbb) :
+	def __init__(self, shape, value = None) :
+
+		# shape -> mbb 변환.
+		mbb = shape
 
 		RTreeNode.__init__(self, mbb)
 
-		self.geometry = None
+		self.shape = shape
+		self.value = value
 
 	def __repr__(self) :
 		return '<RTreeLeaf : ' + \
@@ -120,9 +126,11 @@ class RTreeLeaf(RTreeNode) :
 
 
 class RTree :
+
 	def __init__(self, *args) :
 		
 		self.root = None
+
 
 	def __repr__(self) :
 		ret = ''
@@ -131,6 +139,7 @@ class RTree :
 			ret += '[' + str(node) + ']\n'
 
 		return ret
+
 
 	def traversing( self, node = None, depth = 0 ) :
 		if node is None :
@@ -146,9 +155,9 @@ class RTree :
 			for nn, nd in self.traversing( node.child_right, depth + 1 ) :
 				yield nn, nd
 
-	def insert( self, value ) :
 
-		leaf_inserted = RTreeLeaf( value )
+	def insert( self, shape, value = None ) :
+		leaf_inserted = RTreeLeaf( shape, value )
 		
 		if self.root is None :
 			self.root = leaf_inserted
@@ -169,10 +178,12 @@ class RTree :
 				print '???'
 				return
 
-			area_left_union = multiRectArea( pNode.child_left.mbb, leaf_inserted.mbb )
-			area_right_union = multiRectArea( pNode.child_right.mbb, leaf_inserted.mbb )
+			rect_with_left = multiRectArea( pNode.child_left.mbb, leaf_inserted.mbb )
+			rect_with_right = multiRectArea( pNode.child_right.mbb, leaf_inserted.mbb )
 
-			if area_left_union <= area_right_union :
+			pNode.mbb = pNode.mbb.union( leaf_inserted.mbb )
+
+			if rect_with_left <= rect_with_right :
 				pNode = pNode.child_left
 			else :
 				pNode = pNode.child_right
@@ -181,8 +192,8 @@ class RTree :
 		
 		return True
 
-	def _addLeaf(self, stack, leaf_inserted) :
 
+	def _addLeaf(self, stack, leaf_inserted) :
 		origin_leaf = stack[-1]
 
 		parent_node = origin_leaf.parent
@@ -288,31 +299,67 @@ class RTree :
 
 
 if __name__ == "__main__" :
-	from Tkinter import Tk, Canvas, mainloop
+	from Tkinter import Tk, Canvas
+	import time
 
-	master = Tk()
+	t = Tk()
+	t.title("RTree Test")
 
-	w = Canvas(master, width=800, height=600)
-	w.pack()
+	canvas = Canvas(t, width=800, height=600)
+	canvas.pack()
 
 	my_rtree = RTree()
+
+	start_point = None
+
+	def drawAll(rtree) :
+		canvas.delete("all")
+		for node, depth in rtree.traversing() :
+			if depth == 0 :
+				canvas.create_rectangle( node.mbb.coords(), outline = 'blue', dash = (2,2))
+			else :
+				if isinstance(node, RTreeLeaf) :
+					canvas.create_rectangle( node.mbb.coords() )
+				else :
+					canvas.create_rectangle( node.mbb.coords(), outline = 'red', dash = (1,3))
+
+	def mousedown(e) :
+		global start_point
+		start_point = (e.x, e.y)
+	
+	def mouseup(e) :
+		global start_point, my_rtree
+		if start_point is not None :
+
+			start  = int(round(time.time() * 1000))
+
+			my_rtree.insert( Rect(start_point[0], start_point[1], e.x, e.y) )
+			print my_rtree
+			drawAll(my_rtree)
+			print 'running time : ' + str( float( int(round(time.time() * 1000)) - start ) / 1000 )
+			start = None
+
+	canvas.bind("<ButtonPress-1>", mousedown)
+	canvas.bind("<ButtonRelease-1>", mouseup)
+
+	"""
 	my_rtree.insert( Rect(40,30) )
 
 	my_rtree.insert( Rect(100,100) )
 	my_rtree.insert( Rect(50,88) )
-	my_rtree.insert( Rect(29,27) )
 
-	print my_rtree
+	my_rtree.insert( Rect(60,147) )
+	my_rtree.insert( Rect(15,10) )
+	my_rtree.insert( Rect(30,55) )
 
-	for node, depth in my_rtree.traversing() :
-		if depth == 0 :
-			w.create_rectangle( node.mbb.coords(), outline = 'blue', dash = (2,2))
-		else :
-			if isinstance(node, RTreeLeaf) :
-				w.create_rectangle( node.mbb.coords() )
-			else :
-				w.create_rectangle( node.mbb.coords(), outline = 'red', dash = (2,2))
+	my_rtree.insert( Rect(39,15) )
+	my_rtree.insert( Rect(27,35) )
+	my_rtree.insert( Rect(40,65) )
+	my_rtree.insert( Rect(15,75) )
+	my_rtree.insert( Rect(44,35) )
+	"""
 
-	mainloop()
+
+	t.mainloop()
 
 	
