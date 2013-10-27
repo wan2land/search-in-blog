@@ -2,6 +2,7 @@
 import MySQLdb
 import MySQLdb.cursors
 import inspect
+import SpatialLib
 #import time
 
 """
@@ -24,9 +25,7 @@ class StandardTokenizer :
 				continue
 
 			yield word
-
-	
-
+			
 class SnbConnector :
 	
 	connector = None
@@ -140,6 +139,21 @@ class SnbTable :
 		c = self.connector.cursor()
 		c.execute("""show table status like '{}'""".format( name ))
 		return c.fetchone()['Auto_increment']
+
+	"""13.10.27 서대현 추가함, 근데 DB가 서대현이랑 전창완이랑 맞지 않아서 돌릴 수 없음"""
+	def searchBySpatial(self) :
+		c = self.connector.cursor()
+		result = []
+		query = "SELECT `id`, `name`, AsText(`geo`) as `geo`, `mbr` from geom"
+		#query = "SELECT `id`, `name`, AsText(`geo`) as `geo`, `mbr` from new_table"
+		c.execute(query)
+		for x in c :
+			geom = str(x['geo'])
+			p = SpatialLib.text2geo(geom)
+			if p > 0 :
+				result.append(p)
+			#print x['id'], x['name'], x['geo'], x['mbr']
+		return result
 
 def connect(**args) :
 	return SnbConnector(**args)
