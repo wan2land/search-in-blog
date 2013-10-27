@@ -2,13 +2,11 @@
 import SnbLibrary
 import time
 
+""" 다 필요 없는 코드임, 테스트 하기 위해 만듬 """
 conn = SnbLibrary.connect(user="root", password="1234", host = '127.0.0.1', port = 3307 ,database='test')
 my_table = conn.selectTable('geom')
-#start  = int(round(time.time() * 1000))
-
 result = my_table.searchBySpatial()
 
-""" 원래는 필요없는데 밑에 print 작업 땜에 잠시 사용함 """
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon

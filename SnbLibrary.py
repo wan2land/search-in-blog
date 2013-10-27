@@ -2,7 +2,7 @@
 import MySQLdb
 import MySQLdb.cursors
 import inspect
-import SpatialLib
+import geoConverter
 #import time
 
 """
@@ -25,14 +25,14 @@ class StandardTokenizer :
 				continue
 
 			yield word
-			
+
 class SnbConnector :
 	
 	connector = None
 	prefix = '__snbdummy__'
 
 	def __init__(self, **args) :
-		self.connector = MySQLdb.connect(host = args['host'], user = args['user'], passwd = args['password'], db = args['database'],  cursorclass=MySQLdb.cursors.DictCursor )
+		self.connector = MySQLdb.connect(host = args['host'], port = args['port'], user = args['user'], passwd = args['password'], db = args['database'],  cursorclass=MySQLdb.cursors.DictCursor )
 
 		#인코딩 초기화..!! utf8지정해주었다면 :)
 		if 'encoding' not in args.keys() :
@@ -149,7 +149,7 @@ class SnbTable :
 		c.execute(query)
 		for x in c :
 			geom = str(x['geo'])
-			p = SpatialLib.text2geo(geom)
+			p = geoConverter.text2geo(geom)
 			if p > 0 :
 				result.append(p)
 			#print x['id'], x['name'], x['geo'], x['mbr']

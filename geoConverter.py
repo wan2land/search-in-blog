@@ -29,6 +29,12 @@ def text2geo(text) :
 		return 0
 	return p
 
+def geo2text(geo) :
+	if isinstance(geo,Point) or isinstance(geo,LineString) or isinstance(geo,Polygon) or isinstance(geo,MultiPoint)  or isinstance(geo,MultiLineString)  or isinstance(geo,MultiPolygon) :
+		return str(geo)
+	else :
+		print "Sorry, It's not geometry type"
+
 def convertGeometryCollection(text) :
 	geom = text.replace(",POINT","|POINT")
 	geom = geom.replace(",LINESTRING","|LINESTRING")
@@ -43,8 +49,7 @@ def convertGeometryCollection(text) :
 	geom = Substr(geom,start+1,end-1)
 	init = 0
 
-	for word in geom.split("|") :		
-		print word
+	for word in geom.split("|") :
 		while(init == 0) :
 			result = text2geo(word)
 			init = 1
@@ -169,9 +174,3 @@ def convertMultiPolygon(text) :
 		result.append(p)
 	p = MultiPolygon(result)
 	return p
-
-def geo2text(geo) :
-	if isinstance(geo,Point) or isinstance(geo,LineString) or isinstance(geo,Polygon) or isinstance(geo,MultiPoint)  or isinstance(geo,MultiLineString)  or isinstance(geo,MultiPolygon) :
-		return str(geo)
-	else :
-		print "Sorry, It's not geometry type"
