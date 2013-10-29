@@ -1,0 +1,6 @@
+{
+	"database" : "mysql",
+	"user" : "root",
+	"passwd" : "rooroo123",
+	"dbname" : "snb_test"
+}

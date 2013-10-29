@@ -143,7 +143,12 @@ class RTree :
 
 	def traversing( self, node = None, depth = 0 ) :
 		if node is None :
+			
+			if self.root is None :
+				return
+
 			node = self.root
+
 
 		yield node, depth
 
