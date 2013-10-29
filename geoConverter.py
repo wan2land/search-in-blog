@@ -10,6 +10,7 @@ def Substr(str, start, stop) :
 	return str[start:stop+1]
 
 def text2geo(text) :
+	print text
 	if text.startswith("POINT") :
 		p = convertPoint(text)
 	elif text.startswith("LINESTRING") :
@@ -25,7 +26,7 @@ def text2geo(text) :
 	elif text.startswith("GEOMETRYCOLLECTION") :
 		p = convertGeometryCollection(text)
 	else : 
-		"nodata"
+		"Sorry, It's not geometry type"
 		return 0
 	return p
 
@@ -35,142 +36,165 @@ def geo2text(geo) :
 	else :
 		print "Sorry, It's not geometry type"
 
-def convertGeometryCollection(text) :
-	geom = text.replace(",POINT","|POINT")
-	geom = geom.replace(",LINESTRING","|LINESTRING")
-	geom = geom.replace(",POLYGON","|POLYGON")
-	geom = geom.replace(",MULTIPOINT","|MULTIPOINT")
-	geom = geom.replace(",MULTILINESTRING","|MULTILINESTRING")
-	geom = geom.replace(",MULTIPOLYGON","|MULTIPOLYGON")
-	geom = geom.replace(",GEOMETRYCOLLECTION","|GEOMETRYCOLLECTION")
-	
-	start = geom.find("(")
-	end = len(geom)
-	geom = Substr(geom,start+1,end-1)
-	init = 0
-
-	for word in geom.split("|") :
-		while(init == 0) :
-			result = text2geo(word)
-			init = 1
-		p = text2geo(word)
-		result = result.union(p)
-	return result
-
 def convertPoint(text) :
-	result = []
-	text = text.replace(" ",",")
-	start = text.find("(")
-	middle = text.find(",")
-	end = text.find(")")
-	lat = Substr(text,start+1,middle-1)
-	lng = Substr(text,middle+1,end-1)
+	basket = []
+	head = text.find("(")
+	geoString = Substr(text,head+1,len(text)-2) #geometry 좌표만 찾음
+	pivot = geoString.find(" ")
+	lat = Substr(geoString,0,pivot-1)
+	lng = Substr(geoString,pivot+1,len(geoString))
 	tp = (float(lat),float(lng))
-	result.append(tp)
-	p = Point(result)
-	return p
+	basket.append(tp)
+	geo = Point(basket)
+	return geo
 
 def convertLinestring(text) :
-	start = text.find("(")
-	end = text.find(")")
-	geom = Substr(text,start+1,end-1)
-	result = []
-	for word in geom.split(",") :
-		middle = word.find(" ")
-		lat = Substr(word,0,middle-1)
-		lng = Substr(word,middle+1,len(word))
+	basket = []
+	head = text.find("(")
+	geoString = Substr(text,head+1,len(text)-2)	#geometry 좌표만 찾음
+	for xy in geoString.split(",") :
+		if xy.startswith(" ") :				#String -> Geometry -> String 변환 위해 필요
+			blank = xy.find(" ")
+			xy = Substr(xy, blank+1, len(xy))
+		pivot = xy.find(" ")
+		lat = Substr(xy,0,pivot-1)
+		lng = Substr(xy,pivot+1,len(xy))
 		tp = (float(lat),float(lng))
-		result.append(tp)
-	p = LineString(result)
-	return p
+		basket.append(tp)
+	geo = LineString(basket)
+	return geo
 
 def convertPolygon(text) :
-	start = text.find("((")
-	end = text.find("))")
+	text = text.replace("), (","),(")
+	head = text.find("((")
+	tail = text.find("))")
 	div = text.find("),(")
-	if start == -1 and end == -1 :
-		geom = Substr(text,0,len(text))
+
+	if head == -1 and tail == -1 :	#Multipolygon인 경우
+		geoString = text
 	else :
-		geom = Substr(text,start+2,end-1)
-	if div == -1 :
+		geoString = Substr(text,head+2,tail-1)
+
+	if div == -1 :				# 구멍이 없는 경우
 		ext = []
-		for word in geom.split(",") :
-			middle = word.find(" ")
-			lat = Substr(word,0,middle-1)
-			lng = Substr(word,middle+1,len(word))
+		for xy in geoString.split(",") :
+			if xy.startswith(" ") :
+				blank = xy.find(" ")
+				xy = Substr(xy, blank+1, len(xy))
+			pivot = xy.find(" ")
+			lat = Substr(xy,0,pivot-1)
+			lng = Substr(xy,pivot+1,len(xy))
 			tp = (float(lat),float(lng))
 			ext.append(tp)
-		p = Polygon(ext)
+		geo = Polygon(ext)
 
-	else :	
-		geom = geom.replace("),(","|")
-		temp = geom.find("|")
-		str_ext = Substr(geom,0,temp-1)
-		str_int = Substr(geom,temp+1,len(geom))
+	else :						# 구멍이 있는 경우
+		geoString = geoString.replace("),(","|")
+		temp = geoString.find("|")
+		extString = Substr(geoString,0,temp-1)
+		intString = Substr(geoString,temp+1,len(geoString))
 		ext = []
 		int = []
-		for word in str_ext.split(",") :
-			middle = word.find(" ")
-			lat = Substr(word,0,middle-1)
-			lng = Substr(word,middle+1,len(word))
+		
+		for xy in extString.split(",") :	# 외부 Polygon 
+			if xy.startswith(" ") :
+				blank = xy.find(" ")
+				xy = Substr(xy, blank+1, len(xy))
+			pivot = xy.find(" ")
+			lat = Substr(xy,0,pivot-1)
+			lng = Substr(xy,pivot+1,len(xy))
 			tp = (float(lat),float(lng))
 			ext.append(tp)
-		for word in str_int.split("|") :
-			NotYetInt = []
-			for smallword in word.split(",") :
-				middle = smallword.find(" ")
-				lat = Substr(smallword,0,middle-1)
-				lng = Substr(smallword,middle+1,len(smallword))
+		
+		for bigXy in intString.split("|") :		# 내부 Polygon
+			basket = []
+			for smallXy in bigXy.split(",") :
+				if smallXy.startswith(" ") :
+					blank = smallXy.find(" ")
+					smallXy = Substr(smallXy, blank+1, len(smallXy))
+				pivot = smallXy.find(" ")
+				lat = Substr(smallXy,0,pivot-1)
+				lng = Substr(smallXy,pivot+1,len(smallXy))
 				tp = (float(lat),float(lng))
-				NotYetInt.append(tp)
-			int.append(tuple(NotYetInt))
-		p = Polygon(ext,int)
-	if p.area > 0 :
-		return p
+				basket.append(tp)
+			int.append(tuple(basket))
+		geo = Polygon(ext,int)
+	if geo.area > 0 :
+		return geo
 	else :
-		print ("Error : Sorry, Polygon must have an area < %s >" %(p))
+		print ("Error : Sorry, Polygon must have an area < %s >" %(geo))
 		return 0	
 
 def convertMultiPoint(text) :
-	start = text.find("(")
-	end = text.find(")")
-	geom = Substr(text,start+1,end-1)
-	result = []
-	for word in geom.split(",") :
-		middle = word.find(" ")
-		lat = Substr(word,0,middle-1)
-		lng = Substr(word,middle+1,len(word))
+	head = text.find("(")
+	tail = text.find(")")
+	geoString = Substr(text,head+1,tail-1)
+	basket = []
+	for xy in geoString.split(",") :
+		if xy.startswith(" ") :
+			blank = xy.find(" ")
+			xy = Substr(xy, blank+1, len(xy))
+		pivot = xy.find(" ")
+		lat = Substr(xy,0,pivot-1)
+		lng = Substr(xy,pivot+1,len(xy))
 		tp = (float(lat),float(lng))
-		result.append(tp)
-	p = MultiPoint(result)
-	return p
+		basket.append(tp)
+	geo = MultiPoint(basket)
+	return geo
 
 def convertMultiLineString(text) :
-	start = text.find("((")
-	end = text.find("))")
-	geom = Substr(text,start+2,end-1)
-	geom = geom.replace("),(","|")
-	result = []
-	NotYetresult = []
-	for word in geom.split("|") :
-		for smallword in word.split(",") :
-			middle = smallword.find(" ")
-			lat = Substr(smallword,0,middle-1)
-			lng = Substr(smallword,middle+1,len(smallword))
+	head = text.find("((")
+	tail = text.find("))")
+	geoString = Substr(text,head+2,tail-1)
+	geoString = geoString.replace("),(","|")
+	geoString = geoString.replace("), (","|")
+	bigBasket = []
+	for bigXy in geoString.split("|") :
+		smallBasket = []
+		for smallXy in bigXy.split(",") :
+			if smallXy.startswith(" ") :
+				blank = smallXy.find(" ")
+				smallXy = Substr(smallXy, blank+1, len(smallXy))
+			pivot = smallXy.find(" ")
+			lat = Substr(smallXy,0,pivot-1)
+			lng = Substr(smallXy,pivot+1,len(smallXy))
 			tp = (float(lat),float(lng))
-			NotYetresult.append(tp)
-		result.append(tuple(NotYetresult))
-	p = MultiLineString(result)
-	return p
+			smallBasket.append(tp)
+		bigBasket.append(tuple(smallBasket))
+	geo = MultiLineString(bigBasket)
+	return geo
 
 def convertMultiPolygon(text) :
-	start = text.find("(((")
-	end = text.find(")))")
-	geom = Substr(text,start+3,end-1)
-	geom = geom.replace(")),((","%")
-	result = []
-	for poly in geom.split("%") :
-		p = convertPolygon(poly)
-		result.append(p)
-	p = MultiPolygon(result)
-	return p
+	head = text.find("(((")
+	tail = text.find(")))")
+	geoString = Substr(text,head+3,tail-1)
+	geoString = geoString.replace(")),((","%")
+	geoString = geoString.replace(")), ((","%")
+	basket = []
+	for poly in geoString.split("%") :
+		geo = convertPolygon(poly)
+		basket.append(geo)
+	geo = MultiPolygon(basket)
+	return geo
+
+def convertGeometryCollection(text) :
+	geoString = text.replace(",POINT","|POINT")
+	geoString = geoString.replace(",LINESTRING","|LINESTRING")
+	geoString = geoString.replace(",POLYGON","|POLYGON")
+	geoString = geoString.replace(",MULTIPOINT","|MULTIPOINT")
+	geoString = geoString.replace(",MULTILINESTRING","|MULTILINESTRING")
+	geoString = geoString.replace(",MULTIPOLYGON","|MULTIPOLYGON")
+	geoString = geoString.replace(",GEOMETRYCOLLECTION","|GEOMETRYCOLLECTION")
+	
+	head = geoString.find("(")
+	tail = len(geoString)
+	geoString = Substr(geoString,head+1,tail-1)
+	init = 0
+
+	for divGeo in geoString.split("|") :
+		while(init == 0) :
+			geo = text2geo(divGeo)
+			init = 1
+		temp = text2geo(divGeo)
+		geo = geo.union(temp)
+	return geo

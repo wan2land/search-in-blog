@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import SnbLibrary
 import time
-
+import geoConverter
 """ 다 필요 없는 코드임, 테스트 하기 위해 만듬 """
 conn = SnbLibrary.connect(user="root", password="1234", host = '127.0.0.1', port = 3307 ,database='test')
 my_table = conn.selectTable('geom')
@@ -14,6 +14,17 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPolygon
 
+def text2geoTest() :
+	num = 0
+	for geom in result:
+		geom = str(result[num])
+		p = geoConverter.text2geo(geom)
+		print p
+		if num == len(result) :
+			break
+		num = num + 1
+	print "------------------------------------------------------"
+	
 def totalPrint() :
 	num = 0
 	for geom in result:
@@ -361,7 +372,7 @@ def totalAnalyzer (op) :
 				easyPrint(e,op,x)
 
 """ -------------------------------------------------- """
-
+text2geoTest()
 totalPrint()
 #totalAnalyzer("union")
 #totalAnalyzer("intersection")
