@@ -1,6 +1,6 @@
 {
 	"database" : "mysql",
 	"user" : "root",
-	"passwd" : "rooroo123",
+	"password" : "rooroo123",
 	"dbname" : "snb_test"
 }

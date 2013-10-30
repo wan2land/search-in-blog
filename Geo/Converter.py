@@ -10,7 +10,7 @@ def Substr(str, start, stop) :
 	return str[start:stop+1]
 
 def text2geo(text) :
-	print text
+	text = text.upper()
 	if text.startswith("POINT") :
 		p = convertPoint(text)
 	elif text.startswith("LINESTRING") :
@@ -26,8 +26,8 @@ def text2geo(text) :
 	elif text.startswith("GEOMETRYCOLLECTION") :
 		p = convertGeometryCollection(text)
 	else : 
-		"Sorry, It's not geometry type"
-		return 0
+		print "Sorry, It's not geometry type"
+		return False
 	return p
 
 def geo2text(geo) :
@@ -35,6 +35,7 @@ def geo2text(geo) :
 		return str(geo)
 	else :
 		print "Sorry, It's not geometry type"
+		return False
 
 def convertPoint(text) :
 	basket = []
