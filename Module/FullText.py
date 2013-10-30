@@ -128,15 +128,19 @@ class SnbTable :
 	def searchByText(self, text) :
 		result = []
 		for word in self.tokenizer.doit(text) :
-			for idx in self.searchByWord(word) :
-				if idx not in result :
-					result.append(idx)
+			if len( result ) == 0 :
+				result =  self.searchByWord(word)
+			else :
+				result = list(set(result) & set( self.searchByWord(word) ))
+			#for idx in self.searchByWord(word) :
+			#	if idx not in result :
+			#		result.append(idx)
 
 		return result
 
 	def _getAutoIncrement(self, name) :
 		c = self.connector.cursor()
-		c.execute("""show table status like '{}'""".format( name ))
+		c.execute("""show table status like '%s'""" % name )
 		return c.fetchone()['Auto_increment']
 
 	#13.10.27 서대현 추가함, 근데 DB가 서대현이랑 전창완이랑 맞지 않아서 돌릴 수 없음

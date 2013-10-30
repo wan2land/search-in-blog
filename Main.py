@@ -22,14 +22,14 @@ Timer.checker()
 #	
 
 #2. instance.insert( Shapely, documents )
-#inst.insert( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , "동해물과 백두산이 마르고 닳도록")
+#inst.insert( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , "동해물과 랄라랄라 음")
 #inst.insert( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , "블라블라 랄라랄라 음하하하")
 #inst.insert( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) )
 Timer.checker()
 
 
 #3. instance.search( type, Shapely, keyword = None )
-result = inst.search("disjoint", Point(0,0).buffer(1), "동해물과" )
+result = inst.search("disjoint", Point(0,0).buffer(1), "동해물과 랄라랄라" )
 Timer.checker()
 
 

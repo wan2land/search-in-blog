@@ -47,7 +47,7 @@ class Searcher :
 				"intersects" : "MBRIntersects",
 				"overlaps" : "MBROverlaps",
 				"touches" : "MBRTouches",
-				"within" : "MBRWithin",
+				"within" : "MBRWithin"
 			}
 
 		ret = Converter.geo2text( shapely )
@@ -58,11 +58,14 @@ class Searcher :
 		stmt = self.connector.query("""SELECT `data` FROM `%s`
 			WHERE %s(GeomFromText('%s'), `g`)""" % (self.name + "_spatial", type_map[type.lower()],ret) )
 		
-		result = stmt.fetchall()
+		result = [ int(x['data']) for x in stmt.fetchall() ]
+		#	if idx not in result :
+		#		result.append(idx)
+
+		#print result
 
 		if ( keyword is not None ) :
-			ret = self.fulltext.searchByText( keyword )
-			print ret
+			result = list(set(result) & set( self.fulltext.searchByText( keyword ) ))
 
 
 		return result
