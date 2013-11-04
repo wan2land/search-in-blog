@@ -121,8 +121,8 @@ if __name__ == '__main__':
 
 	dist = Distributor("hello", config)
 
-	dist.multiQuery("""INSERT INTO `test`(`num`) VALUES (%s)""", [(value,) for value in [2,4,5,6,7,8,9,10]])
+	dist.multiQuery("""INSERT INTO `test`(`num`) VALUES (%s)""", [(value,) for value in [10,20,23,25,17,70,34,226]])
 	
-	print dist.multiSearch( "keyword" )
+	#print dist.multiSearch( "keyword" )
 #	print multiSearch(config, )
 

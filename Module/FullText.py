@@ -38,7 +38,6 @@ class SnbConnector :
 		#인코딩 초기화..!! utf8지정해주었다면 :)
 		if 'encoding' not in args.keys() :
 			c = self.connector.cursor()
-			c.execute('SET NAMES utf8')
 
 
 	def selectTable(self, name, **args) :
@@ -68,14 +67,14 @@ class SnbTable :
 					'`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,'
 					'`text` text,'
 					'PRIMARY KEY (`idx`)'
-					') ENGINE=InnoDB;'
+					') ENGINE=InnoDB DEFAULT CHARSET=utf8;'
 					'CREATE TABLE IF NOT EXISTS `' + name + '_idx` ('
 					'`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,'
 					'`word` varchar(50) NOT NULL DEFAULT \'\','
 					'PRIMARY KEY (`idx`),'
 					'UNIQUE KEY (`word`),'
 					'KEY (`word`)'
-					') ENGINE=InnoDB;'
+					') ENGINE=InnoDB DEFAULT CHARSET=utf8;'
 					'CREATE TABLE IF NOT EXISTS `' + name + '_idxp` ('
 					'`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,'
 					'`word_idx` int(11) NOT NULL,'
@@ -83,7 +82,7 @@ class SnbTable :
 					'PRIMARY KEY (`idx`),'
 					'UNIQUE KEY (`word_idx`,`document_idx`),'
 					'KEY (`word_idx`)'
-					') ENGINE=InnoDB;'
+					') ENGINE=InnoDB DEFAULT CHARSET=utf8;'
 				)
 				c.execute(query)
 

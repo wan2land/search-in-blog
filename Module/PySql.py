@@ -18,6 +18,7 @@ class PySql :
 
 	def tableExists( self, name ) :
 		c = self.conn.cursor()
+		c.execute("""SET NAMES utf8""")
 		c.execute("""SELECT COUNT(*) AS count FROM `information_schema`.`tables` WHERE `table_name` = %s""", (name, ))
 
 		return bool( c.fetchone()['count'] )

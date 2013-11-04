@@ -1,12 +1,9 @@
 # -*- coding:utf-8 -*-
-import MySQLdb
-import MySQLdb.cursors
-import inspect
-
 import Geo.Converter as Converter
 import Module.PySql as PySql
 import Module.FullText as FullText
 
+from multiprocessing import Process, Queue
 
 class Searcher :
 
@@ -14,8 +11,9 @@ class Searcher :
 		self.servers = servers
 		self.name = name
 
-		def checkDatabase(server) :
-			import MySQLdb
+		def checkDatabase(name, server) :
+			import Module.PySql as PySql
+			import Module.FullText as FullText
 
 			#arguments initer
 			if ":" in server['host'] :
@@ -39,50 +37,83 @@ class Searcher :
 				db = server['db']
 
 			# Source Start
-			db = MySQLdb.connect(host = host, user = user, passwd = password, db = db)
-			cursor = db.cursor()
-
-			cursor.executemany(query, values)
-
-			db.commit()
-			cursor.close()
-			db.close()		
-
+			connector = PySql.connect(host = host, user = user, password = password, dbname = db)
+			fulltext = FullText.SnbTable( name, connector = connector.getConnector() )
+			if ( not connector.tableExists( name + "_spatial" ) ) :
+				connector.query("""CREATE TABLE `%s` (
+						`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
+						`g` geometry NOT NULL,
+						`data` int(11),
+						PRIMARY KEY (`idx`),
+						SPATIAL KEY (`g`)
+					) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (name + "_spatial") )
 
 		jobs = []
 		for server in self.servers :
-			jobs.append( Process( target = checkDatabase, args = (server)) )
+			jobs.append( Process( target = checkDatabase, args = (name, server)) )
 
 		for job in jobs : job.start()
 		for job in jobs : job.join()
 
 
-		self.connector = PySql.connect( **kwargs )
-		self.fulltext = FullText.SnbTable( name, connector = self.connector.getConnector() )
-
-		if ( not self.connector.tableExists( name + "_spatial" ) ) :
-			self.connector.query("""CREATE TABLE `%s` (
-					`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
-					`g` geometry NOT NULL,
-					`data` int(11),
-					PRIMARY KEY (`idx`),
-					SPATIAL KEY (`g`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (name + "_spatial") )
 
 
 	def insert( self, shapely, documents = None ) :
 
+
+		def insertDatabase( idx, name, server, shapely, documents, output ) :
+			import Geo.Converter as Converter
+			import Module.PySql as PySql
+			import Module.FullText as FullText
+
+			#arguments initer
+			if ":" in server['host'] :
+				host = server['host'].split(':')[0]
+			else :
+				host = server['host']
+
+			if "user" not in server :
+				user = 'root'
+			else :
+				user = server['user']
+
+			if "password" not in server :
+				password = '1234'
+			else :
+				password = server['password']
+
+			if "db" not in server :
+				db = 'mydb'
+			else :
+				db = server['db']
+
+			# Source Start
+			connector = PySql.connect(host = host, user = user, password = password, dbname = db)
+			fulltext = FullText.SnbTable( name, connector = connector.getConnector() )
+
+			idx = 0
+			if documents is not None :
+				idx = fulltext.addDocument( documents )
+
+			ret = Converter.geo2text( shapely )
+
+			if ret is False : 
+				return False
+
+			connector.query("""INSERT INTO `%s`(`g`, `data`) VALUES(GeomFromText('%s'), '%s');""" % (name + "_spatial", ret, idx) )	
+
+		result = Queue()
+
+		jobs = []
 		idx = 0
-		if ( documents is not None ) :
-			idx = self.fulltext.addDocument( documents )
+		for server in self.servers :
+			jobs.append( Process( target = insertDatabase, args = (idx, self.name, server, shapely, documents ,result)) )
+			idx = idx + 1
 
-		ret = Converter.geo2text( shapely )
-		
-		if (ret is False) :
-			return False
+		for job in jobs : job.start()
+		for job in jobs : job.join()
 
-		#print shapely
-		self.connector.query("""INSERT INTO `%s`(`g`, `data`) VALUES(GeomFromText('%s'), '%s');""" % (self.name + "_spatial", ret, idx) )
+		return True
 
 	def search( self, type, shapely, keyword = None ) :
 		
