@@ -6,6 +6,14 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPolygon
 
+class geoTypeError(Exception):	# 지원하는 Geometry 타입이 아닌 경우
+	def __init__(self, str):
+		self.str = str
+
+class polyAreaError(Exception):	# polygon의 경우 area가 0인 경우
+	def __init__(self, str):
+		self.str = str
+
 def Substr(str, start, stop) :
 	return str[start:stop+1]
 
@@ -26,16 +34,14 @@ def text2geo(text) :
 	elif text.startswith("GEOMETRYCOLLECTION") :
 		p = convertGeometryCollection(text)
 	else : 
-		print "Sorry, It's not geometry type"
-		return False
+		raise geoTypeError(text)
 	return p
 
 def geo2text(geo) :
 	if isinstance(geo,Point) or isinstance(geo,LineString) or isinstance(geo,Polygon) or isinstance(geo,MultiPoint)  or isinstance(geo,MultiLineString)  or isinstance(geo,MultiPolygon) :
 		return str(geo)
 	else :
-		print "Sorry, It's not geometry type"
-		return False
+		raise geoTypeError(str(geo))
 
 def convertPoint(text) :
 	basket = []
@@ -46,8 +52,7 @@ def convertPoint(text) :
 	lng = Substr(geoString,pivot+1,len(geoString))
 	tp = (float(lat),float(lng))
 	basket.append(tp)
-	geo = Point(basket)
-	return geo
+	return Point(basket)
 
 def convertLinestring(text) :
 	basket = []
@@ -62,9 +67,8 @@ def convertLinestring(text) :
 		lng = Substr(xy,pivot+1,len(xy))
 		tp = (float(lat),float(lng))
 		basket.append(tp)
-	geo = LineString(basket)
-	return geo
-
+	return LineString(basket)
+	
 def convertPolygon(text) :
 	text = text.replace("), (","),(")
 	head = text.find("((")
@@ -122,9 +126,7 @@ def convertPolygon(text) :
 		geo = Polygon(ext,int)
 	if geo.area > 0 :
 		return geo
-	else :
-		print ("Error : Sorry, Polygon must have an area < %s >" %(geo))
-		return 0	
+	raise polyAreaError(str(geo))
 
 def convertMultiPoint(text) :
 	head = text.find("(")
@@ -140,8 +142,7 @@ def convertMultiPoint(text) :
 		lng = Substr(xy,pivot+1,len(xy))
 		tp = (float(lat),float(lng))
 		basket.append(tp)
-	geo = MultiPoint(basket)
-	return geo
+	return MultiPoint(basket)
 
 def convertMultiLineString(text) :
 	head = text.find("((")
@@ -162,8 +163,7 @@ def convertMultiLineString(text) :
 			tp = (float(lat),float(lng))
 			smallBasket.append(tp)
 		bigBasket.append(tuple(smallBasket))
-	geo = MultiLineString(bigBasket)
-	return geo
+	return MultiLineString(bigBasket)
 
 def convertMultiPolygon(text) :
 	head = text.find("(((")
@@ -175,8 +175,7 @@ def convertMultiPolygon(text) :
 	for poly in geoString.split("%") :
 		geo = convertPolygon(poly)
 		basket.append(geo)
-	geo = MultiPolygon(basket)
-	return geo
+	return MultiPolygon(basket)
 
 def convertGeometryCollection(text) :
 	geoString = text.replace(",POINT","|POINT")
