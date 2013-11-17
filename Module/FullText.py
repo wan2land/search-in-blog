@@ -52,8 +52,7 @@ class SnbOrigin :
 	def __init__(self, name, connector) :
 		self.name = name
 		self.connector = connector
-		self.pointer = self._getAutoIncrement( name )
-
+		
 		if not self.tableExists(name) :
 			c = self.connector.cursor()
 			query = (
@@ -64,6 +63,8 @@ class SnbOrigin :
 				') ENGINE=InnoDB DEFAULT CHARSET=utf8;'
 			)
 			c.execute(query)
+
+		self.pointer = self._getAutoIncrement( name )
 
 
 	def addDocument(self, text) :
