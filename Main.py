@@ -21,6 +21,7 @@ inst = Searcher( "new", Config.fromJson("snb.json") )
 rt = RandomText()
 
 Timer.checker()
+"""
 
 for i in range(0, 5) :
 	inst.insertmany( 
@@ -38,7 +39,7 @@ for i in range(0, 5) :
 
 Timer.checker()
 
-
+"""
 #3. instance.search( type, Shapely, keyword = None )
 result = inst.search("disjoint", Point(0,0).buffer(200), "lorem" )
 Timer.checker()

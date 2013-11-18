@@ -70,6 +70,9 @@ def searchFromAll( text ) :
 	result = []
 	rows = x.fetchall()
 	for row in rows :
+		print row
+
+		print "-----"
 		result.append(
 			dict(idx = row[0], name = row[1], address = row[2])
 		)
@@ -83,7 +86,7 @@ def searchByIdx( idx ) :
 	if len(rows) == 0 :
 		return None
 
-	return parseGeometry(rows[0][0])
+	return (rows[0][0])
 
 
 

@@ -9,7 +9,7 @@ class PySql :
 		self.name = dbname
 		self.conn = MySQLdb.connect(host = host, port = int(port),
 				user = kwargs['user'], passwd = kwargs['password'],
-				db = dbname,  cursorclass=MySQLdb.cursors.DictCursor, connect_timeout=timeout )
+				db = dbname, connect_timeout=timeout )
 		print "Connect!"
 	
 	def query( self, query, args = None ) :
@@ -27,13 +27,16 @@ class PySql :
 		return self.conn
 
 	def tableExists( self, tname ) :
-		c = self.conn.cursor()
-		c.execute("""SET NAMES utf8""")
-		c.execute("""SELECT COUNT(*) AS count FROM `information_schema`.`tables`
-			WHERE `TABLE_NAME` = %s and `TABLE_SCHEMA` = %s""", (tname, self.name))
+		c = self.query("""SELECT COUNT(*) FROM `information_schema`.`tables`
+			WHERE `TABLE_NAME` = %s AND `TABLE_SCHEMA` = %s""", (tname, self.name))
 
-		return bool( c.fetchone()['count'] )
+		return bool( c.fetchone()[0] )
 
+	def getAutoIncrement( self, tname ) :
+		c = self.query("""SELECT `AUTO_INCREMENT` FROM `information_schema`.`tables`
+			WHERE `TABLE_NAME` = %s AND `TABLE_SCHEMA` = %s""", (tname, self.name))
+
+		return c.fetchone()[0]
 
 
 def connect( host, port = 3306, dbname = "test", **kwargs ) :

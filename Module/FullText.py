@@ -56,7 +56,7 @@ class SnbOrigin :
 				PRIMARY KEY (`idx`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % (name, ))
 			
-		self.pointer = self._getAutoIncrement( name )
+		self.pointer = connector.getAutoIncrement( name )
 
 	def addDocument(self, text) :
 		
@@ -79,7 +79,7 @@ class SnbOrigin :
 				WHERE `word_idx` IN ( SELECT `idx` FROM `%s` where `word` = '%s')"""
 				% ( self.name + '_idxp', self.name + '_idx', word, ))
 
-		return [ int(x['document_idx']) for x in stmt.fetchall() ]
+		return [ int(x[0]) for x in stmt.fetchall() ]
 	
 	def searchByText(self, text) :
 		result = []
@@ -93,10 +93,6 @@ class SnbOrigin :
 			#		result.append(idx)
 
 		return result
-
-	def _getAutoIncrement(self, tablename) :
-		stmt = self.connector.query("""show table status like '%s'""" % (tablename,) )
-		return stmt.fetchone()['Auto_increment']
 
 
 
@@ -165,7 +161,7 @@ class SnbTable :
 	def searchByWord(self, word) :
 		stmt = self.connector.query("""SELECT `document_idx` FROM `%s`
 		WHERE `word_idx` in (select `idx` from `%s` where `word` = '%s')""" % ( self.name + '_idxp', self.name + '_idx', word))
-		return [ int(x['document_idx']) for x in stmt.fetchall() ]
+		return [ int(x[0]) for x in stmt.fetchall() ]
 	
 	def searchByText(self, text) :
 		result = []
