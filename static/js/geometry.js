@@ -12,7 +12,7 @@ Made by Seo.day..
 	global.Geometry.geo2text = function( geo ) {
 		// 필요없어.
 	};
-
+ 
 	//https://github.com/JasonSanford/geojson-google-maps
 	global.Geometry.text2geo = function( text ) {
 
