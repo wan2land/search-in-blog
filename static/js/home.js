@@ -14,7 +14,7 @@
 			disableDoubleClickZoom : true
 		});
 
-
+		/*
 		google.maps.event.addListener(map, "dblclick", function ( e ){
 			console.log( e.latLng.lat(), e.latLng.lng() );
 		});
@@ -27,13 +27,14 @@
 		google.maps.event.addListener(map, "mousemove", function( e ) {
 			//console.log( e.latLng.lat(), e.latLng.lng() );
 		});
-
+		*/
 	};
 
 
 
-
-	var $SearchFormAutocomplete = $( "#SearchFormAutocomplete" );
+	var
+	$SearchFormAutocomplete = $( "#SearchFormAutocomplete" )
+	;
 	var autocompleteSpatial = function( keyword ) {
 		$.ajax({
 			type : "GET",
@@ -65,6 +66,9 @@
 	var selectLocation = function(idx) {
 		if (selectLocationLoading) return;
 		selectLocationLoading = true;
+
+		$( '[name=multi_spatial]' ).val(idx);
+
 		$.ajax({
 			type : "GET",
 			url : "http://localhost:5000/ajax/getPolygon",
@@ -74,7 +78,7 @@
 					return
 				if (data.result.length == 0)
 					return
-
+				
 				var polygon = data.result;
 				var newCoords = [];
 				var minLatLng = [];
@@ -128,6 +132,28 @@
 
 	$( '#SearchForm' ).bind("submit", function( e ) {
 		e.preventDefault();
+
+		$.ajax({
+			type : "GET",
+			url : "http://localhost:5000/ajax/searchResult",
+			data : { keyword : 'a' },
+			success : function( data ) {
+				if (data.result == false)
+					return
+				if (data.result.length == 0)
+					return
+
+				var result;
+				for (var i = 0, len = data.result.length; i < len ; i++) {
+					var location = data.result[i];
+					result += "<li data-idx=\""+location.idx+"\">"+location.name+" ("+location.address+")</li>";
+				}
+
+				$SearchFormAutocomplete.find('ul').html(result);
+
+			}
+
+		});		
 	});
 	$( '#SearchFormSpatial' ).bind("keyup", function() {
 		autocompleteSpatial( $(this).val() );

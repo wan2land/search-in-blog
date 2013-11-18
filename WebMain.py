@@ -1,24 +1,23 @@
 # -*- coding:utf-8 -*-
+import Config
 import Module.Timer as Timer
 
+from flask import Flask
+from flask import render_template, request, jsonify
 from random import randint
 from shapely.geometry import *
 
 from SnbDistrubuteSearcher import Searcher
 from Module.RandomText import RandomText
-import Config
-
-
-
-from flask import Flask
-from flask import render_template, request, jsonify
+from Web.CrossdomainAllow import crossdomain
 from MySQLExtend.GetPolygon import searchFromAll, searchByIdx
 from Jamo import divText
 
-from Web.CrossdomainAllow import crossdomain
+
 
 app = Flask(__name__)
-inst = Searcher( "new", Config.fromJson("parallel.json"), Config.fromJson("mysql.json") )
+searcher = None
+Searcher( "new", Config.fromJson("snb.json"))
 
 #url_for("static", filename="style.css")
 
@@ -49,6 +48,28 @@ def ajaxSearchAddress() :
 		return retError()
 
 	return jsonify( result = result )
+
+@app.route("/ajax/searchResult", methods=['POST', 'GET'])
+@crossdomain(origin='*')
+def ajaxSearchResult() :
+
+	if request.method == "POST" :
+		return retError()
+
+	keyword = request.args.get("keyword", None)
+
+	if keyword is None or keyword == '' :
+		return retError()
+
+
+	#result = searcher.
+	#print result
+
+	if isinstance(result, (list, tuple)) and len(result) == 0 :
+		return retError()
+
+	return jsonify( result = result )
+
 
 @app.route("/ajax/getPolygon", methods=['POST', 'GET'])
 @crossdomain(origin='*')

@@ -1,11 +1,12 @@
 # -*- coding:utf-8 -*-
-import MySQLdb
+import Config
 import re
 from decimal import *
 from shapely.geometry import Polygon
+import Module.PySql as PySql
 # use this, brew install geos / sudo apt-get install libgeos-dev
 
-conn = MySQLdb.connect(host="localhost",user="root",passwd="rooroo123",db="siblo")
+conn = PySql.connect( **Config.fromJson("snb.json")[0] ).getConnector()
 
 x = conn.cursor()
 x.execute("SET NAMES utf8")

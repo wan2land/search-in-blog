@@ -8,43 +8,24 @@ from random import randint
 
 class Searcher :
 
-	def __init__(self, name, servers, local ) :
+	def __init__(self, name, servers ) :
 		self.name = name
 
-		self.connector = PySql.connect( **local )
-		self.origin = FullText.SnbOrigin( name, connector = self.connector.getConnector() )
+		self.connector = self._makeConnection( **servers[0] )
 
+		self.origin = FullText.SnbOrigin( name, connector = self.connector )
 		self.servers = []
 
 		for server in servers :
-			if ":" in server['host'] :
-				host = server['host'].split(':')[0]
-			else :
-				host = server['host']
-
-			if "user" not in server :
-				user = 'root'
-			else :
-				user = server['user']
-
-			if "password" not in server :
-				password = '1234'
-			else :
-				password = server['password']
-
-			if "db" not in server :
-				db = 'mydb'
-			else :
-				db = server['db']
-
-			# Source Start
-			connector = PySql.connect(host = host, user = user, password = password, dbname = db)
-			fulltext = FullText.SnbTable( name, connector = connector.getConnector(), origin = None )
+			connector = self._makeConnection( **server )
+			if connector is None :
+				continue
+			
+			fulltext = FullText.SnbTable( name, connector = connector, origin = None )
 			
 			self.servers.append( { "server" : server, "connector" : connector, "fulltext" : fulltext } )
-
-			if ( not connector.tableExists( name + "_spatial" ) ) :
-				connector.query("""CREATE TABLE `%s` (
+			if not connector.tableExists( name + "_spatial" ) :
+				connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
 						`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
 						`g` geometry NOT NULL,
 						`data` int(11),
@@ -52,6 +33,8 @@ class Searcher :
 						SPATIAL KEY (`g`)
 					) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (name + "_spatial") )
 
+	def _makeConnection( self, host = "127.0.0.1", user = "root", password = "root", dbname = "test" ) :
+		return PySql.connect(host = host, user = user, password = password, dbname = dbname)
 
 	def insert( self, shapely, documents = None ) :
 
