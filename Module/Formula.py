@@ -10,11 +10,13 @@ def parser( formula ) :
 
 	for c in formula :
 		if c in operators :
-			output_number.append( int(''.join(buff)) )
-			buff = []
-			output_operator.append(c)
+			if len(buff) > 0 :
+				output_number.append( int(''.join(buff)) )
+				buff = []
+				output_operator.append(c)
 		else :
-			buff.append(c)
+			if c in list('0123456789') :
+				buff.append(c)
 	
 	if len(buff) > 0 :
 		output_number.append( int(''.join(buff)) )
@@ -23,4 +25,4 @@ def parser( formula ) :
 
 
 if __name__ == "__main__" :
-	print parser('6+355*23')
+	print parser('6+-355*+23+undefasdf')

@@ -19,17 +19,44 @@ from Geo.Converter import text2geo, geo2text
 
 app = Flask(__name__)
 searcher = None
-searcher = Searcher( "new", Config.fromJson("snb.json"))
+searcher = Searcher( "blogs", Config.fromJson("snb.json"))
 
 #url_for("static", filename="style.css")
 
 def retError() :
 	return jsonify( result = False )	
 
+def procFormula( formula ) :
+	indexes, operators = fpaser( formula )
+
+	print indexes, operators
+
+	polygon = []
+	for index in indexes :
+		polygon.append( text2geo(searchByIdx(index)) )
+
+	result = polygon[0]
+	i = 0
+	for operator in operators :
+		if operator == '+' :
+			result = result.union( polygon[i+1] )
+		elif operator == '-' :
+			result = result.difference( polygon[i+1] )
+		elif operator == '*' :
+			result = result.intersection( polygon[i+1] )
+		i = i+1
+
+	return result
+
+
 @app.route("/")
 @app.route("/<title>")
 def hello(title = "hello") :
 	return render_template('index.html', title=title)
+
+
+
+
 
 @app.route("/ajax/searchAddress", methods=['GET'])
 @crossdomain(origin='*')
@@ -47,26 +74,10 @@ def ajaxSearchAddress() :
 
 	return jsonify( result = result )
 
-@app.route("/ajax/searchResult", methods=['GET'])
-@crossdomain(origin='*')
-def ajaxSearchResult() :
 
-	keyword = request.args.get("keyword", None).encode("utf-8")
-	multi_spatial = request.args.get("multi_spatial", None)
-	spatial = request.args.get("spatial", None)
-	operate = request.args.get("operate", None)
 
-	if keyword is None or keyword == '' :
-		return retError()
 
-	polygon = text2geo( searchByIdx(multi_spatial) )
 
-	result = searcher.search(operate, polygon, keyword, option = "all" )
-
-	if isinstance(result, (list, tuple)) and len(result) == 0 :
-		return retError()
-
-	return jsonify( result = result )
 
 
 @app.route("/ajax/getPolygon", methods=['GET'])
@@ -75,27 +86,38 @@ def ajaxGetPolygon() :
 
 	formula = request.args.get("formula", None)
 
-	indexes, operators = fpaser( formula )
-
-	print indexes, operators
-
-	polygon = []
-	for index in indexes :
-		polygon.append( text2geo(searchByIdx(index)) )
-
-	result = polygon[0]
-	i = 0
-	for operator in operators :
-		if operator == '+' :
-			result = result.union( polygon[i+1] )
-		elif operator == '-' :
-			result = result.differnce( polygon[i+1] )
-		elif operator == '*' :
-			result = result.intersection( polygon[i+1] )
-		i = i+1
-
+	result = procFormula(formula)
 
 	return jsonify( result = geo2text(result) )
+
+
+
+@app.route("/ajax/searchResult", methods=['GET'])
+@crossdomain(origin='*')
+def ajaxSearchResult() :
+
+	formula = request.args.get("formula", None)
+	keyword = request.args.get("keyword", None)
+	operator = request.args.get("operator", None)
+
+	if keyword is None or keyword == '' :
+		keyword = None
+
+	if isinstance(keyword, unicode) :
+		keyword = keyword.encode("utf-8")
+
+	polygon = procFormula(formula)
+
+	print keyword
+	
+	result = searcher.search(operator, polygon, keyword, option="all")
+
+	print result
+
+	#if isinstance(result, (list, tuple)) and len(result) == 0 :
+	#	return retError()
+
+	return jsonify( result = result )
 
 
 @app.errorhandler(404)

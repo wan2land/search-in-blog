@@ -130,7 +130,6 @@ class MySpatial :
 
 	def search(self, operator, shapely) :
 
-
 		ret = Converter.geo2text( shapely )
 		
 		stmt = self.connector.query("""SELECT `document_idx` FROM `%s` WHERE %s(GeomFromText('%s'), `g`)"""
@@ -181,14 +180,24 @@ class MyNoneFulltext :
 
 		return True
 
+
+	def searchByWord(self, word) :
+		stmt = self.connector.query("""SELECT SQL_NO_CACHE `document_idx` FROM `{}` WHERE `text` LIKE %s"""
+				.format(self.name + '_nidxp'),
+				('%'+word+'%', ) )
+		return [ int(x[0]) for x in stmt.fetchall() ]
 	
 	def search(self, text) :
-		result = self.connector.query("""SELECT `document_idx` FROM `{}` WHERE `text` LIKE %s"""
-				.format(self.name + '_nidxp'),
-				('%'+text+'%', ) )
+		result = []
+		for word in text.split() :
+			if len( result ) == 0 :
+				result =  self.searchByWord(word)
+			else :
+				result = list(set(result) & set( self.searchByWord(word) ))
 
-		return [ int(x[0]) for x in result.fetchall() ]
+		return result
 
+	
 	def destroy(self) :
 		try :
 			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_idx",))

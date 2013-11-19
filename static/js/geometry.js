@@ -8,6 +8,10 @@ Made by Seo.daehyun
 	function replaceAll(temp, org, rep){
 		return temp.split(org).join(rep);
 	}
+	function trim(s) {
+		s += ''; // 숫자라도 문자열로 변환
+		return s.replace(/^\s*|\s*$/g, '');
+	}
 
 	//https://github.com/JasonSanford/geojson-google-maps
 	global.Geometry.text2geo = function( text ) {
@@ -48,8 +52,8 @@ Made by Seo.daehyun
 		var head = text.indexOf("(");
 		var geoString = text.substring(head+1,text.length-1);
 		var pivot = geoString.indexOf(",");
-		var lat = geoString.substring(0,pivot);
-		var lng = geoString.substring(pivot+1,geoString.length);
+		var lng = geoString.substring(0,pivot);
+		var lat = geoString.substring(pivot+1,geoString.length);
 		basket.push(parseFloat(lat),parseFloat(lng));
 		return {
 			"type": "Point",
@@ -64,8 +68,8 @@ Made by Seo.daehyun
 		geoString = geoString.split(",");
 		for(var i = 0; i<geoString.length;i++){
 			var smallBasket = [];
-			var xy = geoString[i].split(" ");
-			smallBasket.push(parseFloat(xy[0]),parseFloat(xy[1]));
+			var xy = trim(geoString[i]).split(" ");
+			smallBasket.push(parseFloat(xy[1]),parseFloat(xy[0]));
 			basket.push(smallBasket);
 		}
 		return {
@@ -81,7 +85,7 @@ Made by Seo.daehyun
 		}
 		var head = text.indexOf("(");
 		var geoString = text.substring(head+1,text.length-1);
-		var div = text.indexOf("),(");
+		var div = text.indexOf("), (");
 
 		if(div == -1){
 			var basket = [];
@@ -91,8 +95,8 @@ Made by Seo.daehyun
 
 			for(var i = 0; i<extString.length;i++){
 				var tupleXY = [];
-				var xy = extString[i].split(" ");
-				tupleXY.push(parseFloat(xy[0]),parseFloat(xy[1]));
+				var xy = trim(extString[i]).split(" ");
+				tupleXY.push(parseFloat(xy[1]),parseFloat(xy[0]));
 				exterior.push(tupleXY);
 			}
 			basket.push(exterior);
@@ -101,7 +105,7 @@ Made by Seo.daehyun
 			var basket = [];
 			var exterior = [];
 			var interior = [];
-			geoString = geoString.replace("),(",")|(");
+			geoString = geoString.replace("), (",")|(");
 			geoString = geoString.split("|");
 			var extString = String(geoString[0]);
 			extString = extString.substring(1,extString.length-1);
@@ -109,8 +113,8 @@ Made by Seo.daehyun
 
 			for(var i = 0; i<extString.length;i++){
 				var tupleXY = [];
-				var xy = extString[i].split(" ");
-				tupleXY.push(parseFloat(xy[0]),parseFloat(xy[1]));
+				var xy = trim(extString[i]).split(" ");
+				tupleXY.push(parseFloat(xy[1]),parseFloat(xy[0]));
 				exterior.push(tupleXY);
 			}
 			var intString = String(geoString[1]);
@@ -118,8 +122,8 @@ Made by Seo.daehyun
 			intString = intString.split(",");
 			for(var i = 0; i<intString.length;i++){
 				var tupleXY = [];
-				var xy = intString[i].split(" ");
-				tupleXY.push(parseFloat(xy[0]),parseFloat(xy[1]));
+				var xy = trim(intString[i]).split(" ");
+				tupleXY.push(parseFloat(xy[1]),parseFloat(xy[0]));
 				interior.push(tupleXY);
 			}
 			basket.push(exterior,interior);
@@ -143,8 +147,8 @@ Made by Seo.daehyun
 			var geoString_temp = String(geoString[i]);
 			geoString_temp = geoString_temp.substring(1,geoString_temp.length-1);
 			var tupleXY = [];
-			var xy = geoString_temp.split(" ");
-			tupleXY.push(parseFloat(xy[0]),parseFloat(xy[1]));
+			var xy = trim(geoString_temp).split(" ");
+			tupleXY.push(parseFloat(xy[1]),parseFloat(xy[0]));
 			basket.push(tupleXY);
 		}
 		return {
@@ -157,7 +161,7 @@ Made by Seo.daehyun
 		var basket = [];
 		var head = text.indexOf("(");
 		var geoString = text.substring(head+1,text.length-1);
-		geoString = replaceAll(geoString,"),(",")|(");
+		geoString = replaceAll(geoString,"), (",")|(");
 		geoString = geoString.split("|");
 		for(var i=0; i<geoString.length; i++){
 			var smallBasket= [];
@@ -166,8 +170,8 @@ Made by Seo.daehyun
 			geoString_temp = geoString_temp.split(",");
 			for(var j=0; j<geoString_temp.length;j++){
 				var tupleXY = [];
-				var xy = geoString_temp[j].split(" ");
-				tupleXY.push(parseFloat(xy[0]),parseFloat(xy[1]));
+				var xy = trim(geoString_temp[j]).split(" ");
+				tupleXY.push(parseFloat(xy[1]),parseFloat(xy[0]));
 				smallBasket.push(tupleXY);
 			}
 			basket.push(smallBasket);
@@ -182,7 +186,7 @@ Made by Seo.daehyun
 		var basket = [];
 		var head = text.indexOf("(");
 		var geoString = text.substring(head+1,text.length-1);
-		geoString = replaceAll(geoString,")),((","))%((");
+		geoString = replaceAll(geoString,")), ((","))%((");
 		geoString = geoString.split("%");
 		for(var i=0;i<geoString.length;i++){
 			var geo = convertPolygon("m" + geoString[i]);

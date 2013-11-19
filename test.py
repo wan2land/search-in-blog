@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import sys
 
-print sys.argv
+print isinstance(u"영광".encode("utf-8"), str)

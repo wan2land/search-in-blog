@@ -1,3 +1,9 @@
+google.maps.Polygon.prototype.my_getBounds=function(){
+    var bounds = new google.maps.LatLngBounds()
+    this.getPath().forEach(function(element,index){bounds.extend(element)})
+    return bounds
+}
+
 ;(function($, g){
 
 	var
@@ -5,15 +11,13 @@
 	map_center
 	;
 
-	var initialize = function() {
-		map_center = new google.maps.LatLng(37.544577320855815, 127.02392578125);
-		map = new google.maps.Map(document.getElementById('map'), {
-			zoom: 13,
-			center: map_center,
-			mapTypeId: google.maps.MapTypeId.ROADMAP,
-			disableDoubleClickZoom : true
-		});
-	};
+	map_center = new google.maps.LatLng(37.544577320855815, 127.02392578125);
+	map = new google.maps.Map(document.getElementById('map'), {
+		zoom: 13,
+		center: map_center,
+		mapTypeId: google.maps.MapTypeId.ROADMAP,
+		disableDoubleClickZoom : true
+	});
 
 
 
@@ -27,6 +31,8 @@
 	var selectLocationLoading = false;
 	var recentPolygon = null;
 	var selectLocation = function( formula ) {
+
+		console.log(formula);
 		if (selectLocationLoading) return;
 		selectLocationLoading = true;
 
@@ -36,88 +42,65 @@
 			data : { formula : formula },
 			success : function( data ) {
 
-				console.log( g.Geometry.text2geo(data.result) );
-
-
-				var shape = new GeoJSON( g.Geometry.text2geo( data.result ), {
-					strokeColor: "#0000ff",
-					strokeOpacity: 0.8,
-					strokeWeight: 2,
-					fillColor: "#0000ff",
-					fillOpacity: 0.35
-				});
-
-				console.log( shape );
-				shape.setMap(map);
-
-				selectLocationLoading = false;
-
-				return
-
+				// clear map
 				if ( recentPolygon !== null ) {
-					(function(x) {
-						x.setMap(null);
-					})(recentPolygon);
-				}
-				recentPolygon = shape;
-
-				recentPolygon.setMap(map);
-				
-
-				return;
-				/*
-				if (data.result == false)
-					return
-				if (data.result.length == 0)
-					return
-				
-				var polygon = data.result;
-				var newCoords = [];
-				var minLatLng = [];
-				var maxLatLng = [];
-				for (var i in polygon) {
-					if (i == 0) {
-						minLatLng = [polygon[i][0], polygon[i][1]];
-						maxLatLng = [polygon[i][0], polygon[i][1]];
+					if (recentPolygon.length) {
+						for (var i = 0, len = recentPolygon.length; i < len; i++) {
+							if (recentPolygon[i].length) {
+								for (var j = 0, jlen = recentPolygon[i].length; j < jlen; j++) {
+									recentPolygon[i][j].setMap(null);
+								}
+							}
+							else {
+								recentPolygon[i].setMap(null);
+							}
+						}
 					}
 					else {
-						if ( minLatLng[0] > polygon[i][0] ) minLatLng[0] = polygon[i][0];
-						if ( maxLatLng[0] < polygon[i][0] ) maxLatLng[0] = polygon[i][0];
-						if ( minLatLng[1] > polygon[i][1] ) minLatLng[1] = polygon[i][1];
-						if ( maxLatLng[1] < polygon[i][1] ) maxLatLng[1] = polygon[i][1];
+						recentPolygon.setMap(null);
 					}
-					newCoords.push( new google.maps.LatLng(polygon[i][0], polygon[i][1]) );
 				}
-				
-				if ( recentPolygon !== null ) {
-					(function(x) {
-						x.setMap(null);
-					})(recentPolygon);
-				}
-				recentPolygon = new google.maps.Polygon({
-					paths: newCoords,
-					strokeColor: "#0000ff",
-					strokeOpacity: 0.8,
-					strokeWeight: 2,
-					fillColor: "#0000ff",
-					fillOpacity: 0.35
-				});
 
-				recentPolygon.setMap(map);
-				map.panToBounds( new google.maps.LatLngBounds(
-						new google.maps.LatLng(minLatLng[0], minLatLng[1]),
-						new google.maps.LatLng(maxLatLng[0], maxLatLng[1])
-				));
+				g.mapp = map;
+				g.foo = recentPolygon = new GeoJSON( g.Geometry.text2geo( data.result ) );
+
+				console.log( g.Geometry.text2geo( data.result ));
+
+				if (recentPolygon.type && recentPolygon.type == "Error"){
+					return;
+				}
+				if (recentPolygon.length) {
+					for (var i = 0; i < recentPolygon.length; i++) {
+						if(recentPolygon[i].length) {
+							for(var j = 0; j < recentPolygon[i].length; j++){
+								recentPolygon[i][j].setMap(map);
+								if(recentPolygon[i][j].geojsonProperties) {
+									setInfoWindow(recentPolygon[i][j]);
+								}
+							}
+						}
+						else{
+							recentPolygon[i].setMap(map);
+						}
+						if (recentPolygon[i].geojsonProperties) {
+							setInfoWindow(recentPolygon[i]);
+						}
+					}
+				}
+				else{
+					recentPolygon.setMap(map)
+					if (recentPolygon.geojsonProperties) {
+						setInfoWindow(recentPolygon);
+					}
+				}
 
 				selectLocationLoading = false;
-				*/
+
 			}
 
 		});
 	};
-
-
-	var formulaRefresh = function() {
+	var getFormula = function() {
 		var spatial_groups = $SearchFormSpatial.find('div.group');
 		var formula = "";
 
@@ -132,7 +115,11 @@
 
 			if (spatial_operator === "=") break;
 		}
-		selectLocation(formula);
+		return formula;
+	};
+
+	var formulaRefresh = function() {
+		selectLocation( getFormula() );
 	};
 //SearchFormFormula
 	$SearchFormAutocomplete.find('ul').on("click", "li", function() {
@@ -155,12 +142,12 @@
 		$.ajax({
 			type : "GET",
 			url : "http://localhost:5000/ajax/searchResult",
-			data : 		$(this).serialize(),
+			data : {
+				"operator" : $('#SearchFormOperate').find('option:selected').val(),
+				"formula" : getFormula(),
+				"keyword" : $("#SearchFormKeyword").val()
+			},
 			success : function( data ) {
-				if (data.result == false)
-					return
-				if (data.result.length == 0)
-					return
 
 				console.log(data.result);
 			}
@@ -205,6 +192,5 @@
 		$SearchFormSpatial.append( spatial_append_context );
 	});
 
-	initialize();
 
 })(jQuery, window);

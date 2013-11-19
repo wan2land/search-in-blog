@@ -15,7 +15,8 @@ option = {
 	"story" : 1,
 	"init" : True,
 	"insert" : True,
-	"search" : True
+	"search" : True,
+	"count" : 1000
 }
 
 if len(sys.argv) < 2 :
@@ -51,15 +52,15 @@ print "Use choose Story", option['story']
 print "Connecting Server..."
 Timer.start()
 if option['story'] == 1 :
-	searcher = Searcher( "story1", Config.fromJson("snb.json") )
+	searcher = Searcher( "story1_"+str(option['count']), Config.fromJson("snb.json") )
 elif option['story'] == 2 :
-	searcher = Searcher( "story2", Config.fromJson("snb.json"), fulltext = False )
+	searcher = Searcher( "story2_"+str(option['count']), Config.fromJson("snb.json"), fulltext = False )
 elif option['story'] == 3 :
-	searcher = Searcher( "story3", Config.fromJson("onlyone.json") )
+	searcher = Searcher( "story3_"+str(option['count']), Config.fromJson("onlyone.json") )
 elif option['story'] == 4 :
-	searcher = Searcher( "story4", Config.fromJson("onlyone.json"), fulltext = False )
-Timer.checker("Runtime")
+	searcher = Searcher( "story4_"+str(option['count']), Config.fromJson("onlyone.json"), fulltext = False )
 
+Timer.checker("Runtime")
 
 if option['init'] :
 	print "모든 데이터를 초기화 합니다. 정말로 실행하시겠습니까..?"
@@ -79,7 +80,7 @@ if option['init'] :
 
 #2. instance.insert( Shapely, documents )
 if option['insert'] :
-	i_count = 10000
+	i_count = option['count']
 	print "데이터를 색인합니다. 16 *", i_count ,"=", (i_count * 16) ,"개의 문서."
 
 	rt = RandomText() #Random Text Creator

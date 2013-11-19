@@ -14,9 +14,9 @@ searcher = Searcher( "blogs", Config.fromJson("snb.json") )
 #searcher.destroy()
 #searcher.init()
 
-docs = PySql.connect(host = "localhost", user = "root", password = "rooroo123", dbname="siblo")
-result = docs.query("""SELECT * FROM `blogorder`""")
-
+#docs = PySql.connect(host = "localhost", user = "root", password = "rooroo123", dbname="siblo")
+#result = docs.query("""SELECT * FROM `blogorder`""")
+"""
 Timer.checker()
 
 
@@ -40,35 +40,12 @@ for item in result.fetchall() :
 
 Timer.checker()
 
-#2. instance.insert( Shapely, documents )
 """
-rt = RandomText()
-
-Timer.checker()
-
-for i in range(0, 3) :
-	inst.insert( 
-		( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , rt.generate(), {
-			"foo" : "bar",
-			"hello" : "world"
-		}),
-		( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , rt.generate(), {
-			"num" : 123
-		}),
-		( Point(randint(-2500,2500),randint(-2500,2500)).buffer(randint(1,3)) , rt.generate())
-
-	)
-
-Timer.checker()
-
 
 
 #3. instance.search( type, Shapely, keyword = None )
-result = inst.search("disjoint", Point(0,0).buffer(200), option="lorem")
-Timer.checker()
+result = searcher.search("disjoint", Point(0,0).buffer(1), u"영광".encode('utf-8'))
 
-for item in result :
-	print item[1]
-	if len(item) > 2 :
-		print item[2]
-"""
+print result
+
+
