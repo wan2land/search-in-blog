@@ -31,16 +31,23 @@ nav > form select {
 nav > form > div.controller-spatial {
 	display:inline-block;
 	vertical-align:top;
-	margin:0 20px;
+	margin:0 15px;
 }
 
-nav > form > div.controller-spatial > input {
+nav > form > div.controller-spatial > div.group {
+	display:inline-block;
+	padding:0 5px;
+}
+nav > form > div.controller-spatial > div.group.hidden {
+	display:none;
+}
+nav > form > div.controller-spatial > div.group > input {
 	width:80px;
 	border:1px solid #ccc;
 	margin-right:5px;
 }
-nav > form > div.controller-spatial > select {
-	margin-right:5px;
+
+nav > form > div.controller-spatial > div.group > select {
 }
 
 

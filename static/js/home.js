@@ -26,15 +26,46 @@
 	//Location Polygon Loading!!
 	var selectLocationLoading = false;
 	var recentPolygon = null;
-	var selectLocation = function(idx) {
+	var selectLocation = function( formula ) {
 		if (selectLocationLoading) return;
 		selectLocationLoading = true;
 
 		$.ajax({
 			type : "GET",
 			url : "http://localhost:5000/ajax/getPolygon",
-			data : { idx : idx },
+			data : { formula : formula },
 			success : function( data ) {
+
+				console.log( g.Geometry.text2geo(data.result) );
+
+
+				var shape = new GeoJSON( g.Geometry.text2geo( data.result ), {
+					strokeColor: "#0000ff",
+					strokeOpacity: 0.8,
+					strokeWeight: 2,
+					fillColor: "#0000ff",
+					fillOpacity: 0.35
+				});
+
+				console.log( shape );
+				shape.setMap(map);
+
+				selectLocationLoading = false;
+
+				return
+
+				if ( recentPolygon !== null ) {
+					(function(x) {
+						x.setMap(null);
+					})(recentPolygon);
+				}
+				recentPolygon = shape;
+
+				recentPolygon.setMap(map);
+				
+
+				return;
+				/*
 				if (data.result == false)
 					return
 				if (data.result.length == 0)
@@ -79,6 +110,7 @@
 				));
 
 				selectLocationLoading = false;
+				*/
 			}
 
 		});
@@ -86,7 +118,21 @@
 
 
 	var formulaRefresh = function() {
-		console.log( $SearchFormSpatial.find('input.spatial-name') );
+		var spatial_groups = $SearchFormSpatial.find('div.group');
+		var formula = "";
+
+		for (var i = 0, len = spatial_groups.length; i < len; i++) {
+			var spatial_group = spatial_groups.eq(i);
+
+			var spatial_loc = spatial_group.find('input.spatial-name').data('idx');
+			var spatial_operator = spatial_group.find('select.spatial-operator').find('option:selected').val();
+
+			formula += spatial_loc;
+			formula += spatial_operator;
+
+			if (spatial_operator === "=") break;
+		}
+		selectLocation(formula);
 	};
 //SearchFormFormula
 	$SearchFormAutocomplete.find('ul').on("click", "li", function() {
@@ -98,8 +144,6 @@
 		$SearchFormAutocomplete.find('ul').empty();
 
 		formulaRefresh();
-
-		selectLocation( idx );
 	});
 
 
@@ -130,10 +174,35 @@
 		$SearchFormAutocomplete.css("left", $(this).offset().left );
 		g.autocompleteSpatial( keyword );
 	});
+
 	var spatial_append_context = $SearchFormSpatial.html();
 	$SearchFormSpatial.on("change", "select", function() {
-		if ( $(this).find('option:selected').val() === "none" ) return;
-		$SearchFormSpatial.append( $SearchFormSpatial.html() );
+		
+		var $group = $(this).parent();
+
+		formulaRefresh();
+
+		// 오퍼레이터가 = 이면.
+		if ( $(this).find('option:selected').val() === "=" ) {
+			$group.nextAll().addClass('hidden');
+			return;
+		}
+
+		// 나머지 오퍼레이터일때.
+		// 다음에 뭔가 있으면 
+		if ( $group.next().length !== 0 ) {
+			var $next = $group.next();
+			while ( true ) {
+				$next.removeClass('hidden');
+				if ( $next.find('select.spatial-operator').find('option:selected').val() === "=" ) {
+					break;
+				}
+				$next = $next.next();
+			}
+			return;
+		}
+
+		$SearchFormSpatial.append( spatial_append_context );
 	});
 
 	initialize();

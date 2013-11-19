@@ -9,6 +9,7 @@ from shapely.geometry import *
 
 from SnbDistrubuteSearcher import Searcher
 from Module.RandomText import RandomText
+from Module.Formula import parser as fpaser
 from Web.CrossdomainAllow import crossdomain
 from MySQLExtend.GetPolygon import searchFromAll, searchByIdx, parseGeometry
 from Jamo import divText
@@ -40,7 +41,6 @@ def ajaxSearchAddress() :
 		return retError()
 
 	result = searchFromAll( "".join( divText( keyword ) ).encode('utf-8') )
-	print result
 
 	if isinstance(result, (list, tuple)) and len(result) == 0 :
 		return retError()
@@ -73,17 +73,29 @@ def ajaxSearchResult() :
 @crossdomain(origin='*')
 def ajaxGetPolygon() :
 
-	idx = request.args.get("idx", None)
+	formula = request.args.get("formula", None)
 
-	if idx is None or idx == '' :
-		return retError()
+	indexes, operators = fpaser( formula )
 
-	result = parseGeometry(searchByIdx( idx ))
+	print indexes, operators
 
-	if isinstance(result, (list, tuple)) and len(result) == 0 :
-		return retError()
+	polygon = []
+	for index in indexes :
+		polygon.append( text2geo(searchByIdx(index)) )
 
-	return jsonify( result = result )
+	result = polygon[0]
+	i = 0
+	for operator in operators :
+		if operator == '+' :
+			result = result.union( polygon[i+1] )
+		elif operator == '-' :
+			result = result.differnce( polygon[i+1] )
+		elif operator == '*' :
+			result = result.intersection( polygon[i+1] )
+		i = i+1
+
+
+	return jsonify( result = geo2text(result) )
 
 
 @app.errorhandler(404)

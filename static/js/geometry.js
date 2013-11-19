@@ -39,7 +39,7 @@ Made by Seo.daehyun
 			alert("It is NOT GeometryType");
 			return;
 		}
-		console.log(geo);
+		//console.log(geo);
 		return geo;
 	};
 

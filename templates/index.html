@@ -41,13 +41,15 @@ This web page has been developed by Wani.
 
 		<!-- union(+), difference(-), intersection(*)-->
 		<div class="controller controller-spatial" id="SearchFormSpatial">
-			<input type="text" name="spatial[]" autocomplete="off" required placeholder="지명" class="spatial-name" />
-			<select name="operator[]" class="spatial-operator">
-				<option value="none">---</option>
-				<option value="union">+</option>
-				<option value="differnce">-</option>
-				<option value="intersection">*</option>
-			</select>
+			<div class="group">
+				<input type="text" name="spatial[]" autocomplete="off" required placeholder="지명" class="spatial-name" />
+				<select name="operator[]" class="spatial-operator">
+					<option value="=">=</option>
+					<option value="+">+</option>
+					<option value="-">-</option>
+					<option value="*">*</option>
+				</select>
+			</div>
 		</div>
 		<button type="submit">검색</button>
 	</form>
@@ -58,6 +60,8 @@ This web page has been developed by Wani.
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="{{ url_for('static', filename="js/jquery.autocomplete.min.js") }}"></script>
+<script src="{{ url_for('static', filename="js/GeoJSON.min.js") }}"></script>
+<script src="{{ url_for('static', filename="js/geometry.min.js") }}"></script>
 <script src="{{ url_for('static', filename="js/extra-form.min.js") }}"></script>
 <script src="{{ url_for('static', filename="js/home.min.js") }}"></script>
 </body>
