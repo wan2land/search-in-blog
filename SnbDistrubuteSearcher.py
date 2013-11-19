@@ -1,10 +1,19 @@
 # -*- coding:utf-8 -*-
+import warnings
+
 import Geo.Converter as Converter
 import Module.PySql as PySql
 
-from Module.FullText import StandardTokenizer
+from Module.LimTokenizer import LimTokenizer, ords
 from multiprocessing import Process, Queue
 from random import randint
+
+
+
+
+warnings.filterwarnings('error')
+
+
 
 class MyMaster :
 	def __init__(self, name, connector) :
@@ -13,22 +22,47 @@ class MyMaster :
 		self.connector = connector
 		self.cache_item = dict()
 
+		self.init()
+
+	def init(self) :
 		# Original Table Create!!
-		if not connector.tableExists( name ) :
-			connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
+		if not self.connector.tableExists( self.name ) :
+			self.connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
 				`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
 				`g` geometry NOT NULL,
 				`text` text,
 				PRIMARY KEY (`idx`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % ( name, ))
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % ( self.name, ))
 
-		self.idx = connector.getAutoIncrement( name )
+		if not self.connector.tableExists( self.name + "_meta" ) :
+			self.connector.query("""CREATE TABLE `%s` (
+				`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				`name` varchar(20) DEFAULT NULL,
+				`value` text DEFAULT NULL,
+				`document_idx` int(11) DEFAULT NULL,
+				PRIMARY KEY (`idx`),
+				KEY `document_idx` (`document_idx`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % ( self.name + "_meta", ))
 
-	def insert(self, g, text) :
+		self.idx = self.connector.getAutoIncrement( self.name )
+
+	def insert(self, values) :
+
+		g = values[0]
+		text = values[1]
+
 		idx = self.idx
 
-		self.connector.query("""INSERT INTO `%s`(`idx`, `g`, `text`) VALUES ('%s', GeomFromText('%s'), '%s');"""
-				% (self.name, idx, Converter.geo2text(g), text) )
+		self.connector.query("""INSERT INTO `{}`(`idx`, `g`, `text`) VALUES (%s, GeomFromText(%s), %s);"""
+				.format(self.name),
+				(idx, Converter.geo2text(g), text) )
+		
+		if len(values) > 2 :
+			for k,v in values[2].iteritems() :
+				self.connector.query("""INSERT INTO `{}`(`name`, `value`, `document_idx`) VALUES (%s, %s, %s);"""
+						.format(self.name + "_meta"),
+						(k, v, idx) )
+		
 
 		self.idx = self.idx + 1
 
@@ -39,7 +73,33 @@ class MyMaster :
 			c = self.connector.query("""SELECT AsText(`g`), `text` FROM `%s` WHERE `idx` = %s""" % (self.name, idx ) )
 			self.cache_item[idx] = c.fetchone()
 
+			c = self.connector.query("""SELECT `name`, `value` FROM `%s` WHERE `document_idx` = %s"""
+					% (self.name + "_meta", idx)
+				)
+			options = dict()
+			for item in c.fetchall() :
+				options[item[0]] = item[1]
+
+			if len(options.keys()) > 0 :
+				self.cache_item[idx] = self.cache_item[idx] + (options, )
+
 		return self.cache_item[idx]
+
+	def destroy(self) :
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name ,))
+		except :
+			pass
+
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_meta" ,))
+		except :
+			pass			
+
+		print "Remove All Master Table!"
+
+
+
 
 
 class MySpatial :
@@ -48,18 +108,22 @@ class MySpatial :
 		self.name = name
 		self.connector = connector
 
-		if not connector.tableExists( name + "_spatial" ) :
-			connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
+		self.init()
+
+	def init(self) :
+
+		if not self.connector.tableExists( self.name + "_spatial" ) :
+			self.connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
 					`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
 					`g` geometry NOT NULL,
-					`data` int(11),
+					`document_idx` int(11),
 					PRIMARY KEY (`idx`),
 					SPATIAL KEY (`g`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (name + "_spatial")
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (self.name + "_spatial")
 			)
 
 	def insert(self, g, idx) :
-		self.connector.query("""INSERT INTO `%s`(`g`, `data`) VALUES(GeomFromText('%s'), '%s');"""
+		self.connector.query("""INSERT INTO `%s`(`g`, `document_idx`) VALUES(GeomFromText('%s'), '%s');"""
 				% (self.name + "_spatial", Converter.geo2text(g), idx) )
 
 		return True
@@ -69,12 +133,84 @@ class MySpatial :
 
 		ret = Converter.geo2text( shapely )
 		
-		stmt = self.connector.query("""SELECT `data` FROM `%s` WHERE %s(GeomFromText('%s'), `g`)"""
+		stmt = self.connector.query("""SELECT `document_idx` FROM `%s` WHERE %s(GeomFromText('%s'), `g`)"""
 				% (self.name + "_spatial", operator, ret) )
 		
 		result = [ int(x[0]) for x in stmt.fetchall() ]
 
 		return result
+
+	def destroy(self) :
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_spatial" ,))
+		except :
+			pass
+
+		print "Remove All Spatial Table!"
+
+
+
+
+class MyNoneFulltext :
+	def __init__( self, name, connector, tokenizer = None ) :
+		self.name = name
+		self.connector = connector
+		
+		self.init()
+
+	def init(self) :
+		if not self.connector.tableExists(self.name + '_nidxp') :
+			self.connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
+				`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				`text` text NOT NULL,
+				`document_idx` int(11) NOT NULL,
+				PRIMARY KEY (`idx`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8;""" % (self.name + '_nidxp')
+			)
+
+	def insert(self, text, idx ) :
+
+		try :
+			self.connector.query("""INSERT IGNORE INTO `{}`
+					SET `text` = %s, `document_idx` = %s """
+					.format( self.name + '_nidxp'),
+					( text, idx ) )
+		except :
+			print "Error, this is not strings!", idx
+		
+
+		return True
+
+	
+	def search(self, text) :
+		result = self.connector.query("""SELECT `document_idx` FROM `{}` WHERE `text` LIKE %s"""
+				.format(self.name + '_nidxp'),
+				('%'+text+'%', ) )
+
+		return [ int(x[0]) for x in result.fetchall() ]
+
+	def destroy(self) :
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_idx",))
+		except :
+			pass
+
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_idxp" ,))
+		except :
+			pass
+
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_nidxp" ,))
+		except :
+			pass
+
+
+		print "Remove All None Fulltext Table!"
+
+
+
+
 
 
 
@@ -84,21 +220,24 @@ class MyFulltext :
 		self.connector = connector
 		
 		if tokenizer is None :
-			self.tokenizer = StandardTokenizer
+			self.tokenizer = LimTokenizer
 		else :
 			self.tokenizer = tokenizer
 
-		if not connector.tableExists(name + '_idx') :
+		self.init()
+
+	def init(self) :
+		if not self.connector.tableExists(self.name + '_idx') :
 			self.connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
 				`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
 				`word` varchar(50) NOT NULL DEFAULT '',
 				PRIMARY KEY (`idx`),
 				UNIQUE KEY (`word`),
 				KEY (`word`)
-				) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % (name + "_idx", )
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % (self.name + "_idx", )
 			)
 
-		if not connector.tableExists(name + '_idxp') :
+		if not self.connector.tableExists(self.name + '_idxp') :
 			self.connector.query("""CREATE TABLE IF NOT EXISTS `%s` (
 				`idx` int(11) unsigned NOT NULL AUTO_INCREMENT,
 				`word_idx` int(11) NOT NULL,
@@ -106,17 +245,23 @@ class MyFulltext :
 				PRIMARY KEY (`idx`),
 				UNIQUE KEY (`word_idx`,`document_idx`),
 				KEY (`word_idx`)
-				) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % (name + '_idxp')
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;""" % (self.name + '_idxp')
 			)
 
 	def insert(self, text, idx ) :
 		for word in self.tokenizer.doit(text) :
-			self.connector.query("""INSERT IGNORE INTO `%s`
-					SET `word` = '%s'""" % ( self.name + '_idx', word ))
-			self.connector.query("""INSERT IGNORE INTO `%s`
-					SET `word_idx` = (SELECT `idx` FROM `%s` WHERE `word` = '%s' limit 1),
-					`document_idx` = '%s' """ % ( self.name + '_idxp',
-					self.name + '_idx' , word, idx))
+			try :
+				self.connector.query("""INSERT IGNORE INTO `%s`
+						SET `word` = '%s'""" % ( self.name + '_idx', word ))
+				self.connector.query("""INSERT IGNORE INTO `%s`
+						SET `word_idx` = (SELECT `idx` FROM `%s` WHERE `word` = '%s' limit 1),
+						`document_idx` = '%s' """ % ( self.name + '_idxp',
+						self.name + '_idx' , word, idx))
+			except :
+				print "Error, this is not strings!", idx, ":", word
+				print ords(word)
+				continue
+			
 
 		return True
 
@@ -135,10 +280,35 @@ class MyFulltext :
 
 		return result
 
+	def destroy(self) :
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_idx",))
+		except :
+			pass
+
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_idxp" ,))
+		except :
+			pass
+
+		try :
+			self.connector.query("""DROP TABLE `%s`""" % (self.name + "_nidxp" ,))
+		except :
+			pass
+
+		print "Remove All Fulltext Table!"
+
+
+
+
+
+
+
+
 
 class Searcher :
 
-	def __init__(self, name, servers, prefix = "_siblo_") :
+	def __init__(self, name, servers, prefix = "_siblo_", fulltext = True ) :
 
 		self.prefix = prefix
 		self.name = name
@@ -153,52 +323,28 @@ class Searcher :
 			if connector is None :
 				continue
 
-			fulltext = MyFulltext( prefix + name, connector = connector )
+			if fulltext :
+				full = MyFulltext( prefix + name, connector = connector )
+			else :
+				full = MyNoneFulltext( prefix + name, connector = connector )
+
 			spatial = MySpatial( prefix + name, connector = connector )
 
-			self.servers.append({"fulltext" : fulltext, "spatial" : spatial})
+			self.servers.append({"fulltext" : full, "spatial" : spatial})
 
-			
+	def init(self) :
+		self.master.init()
+
+		for server in self.servers :
+			server['fulltext'].init()
+			server['spatial'].init()			
 
 	def _makeConnection( self, host = "127.0.0.1", user = "root", password = "root", dbname = "test" ) :
 		return PySql.connect(host = host, user = user, password = password, dbname = dbname)
 
-	"""
-	def insert( self, shapely, documents = None ) :
 
 
-		def insertDatabase( idx, name, server, shapely, documents, output ) :
-			# Source Start
-			connector = server['connector']
-			fulltext = server['fulltext']
-
-			idx = 0
-			if documents is not None :
-				idx = fulltext.addDocument( documents )
-
-			ret = Converter.geo2text( shapely )
-
-			if ret is False : 
-				return False
-
-			connector.query(""INSERT INTO `%s`(`g`, `data`) VALUES(GeomFromText('%s'), '%s');"" % (name + "_spatial", ret, idx) )	
-
-		
-		result = Queue()
-
-		jobs = []
-		idx = randint(0,1)
-		
-		server = self.servers[idx]
-		jobs.append( Process( target = insertDatabase, args = (idx, self.name, server, shapely, documents ,result)) )
-
-		for job in jobs : job.start()
-		for job in jobs : job.join()
-
-		return True
-	"""
-
-	def insertmany( self, *values ) :
+	def insert( self, *values ) :
 
 
 		def insertDatabase( server, values ) :
@@ -209,16 +355,16 @@ class Searcher :
 
 			for value in values :
 
-				idx = value[2]
+				idx = value[0]
 
-				fulltext.insert( value[1], idx )
-				spatial.insert( value[0], idx )
+				spatial.insert( value[1], idx )
+				fulltext.insert( value[2], idx )
 
 		jobs = []
 		revalues = []
 
 		for value in values :
-			revalues.append( value + (self.master.insert( value[0], value[1] ), ) )
+			revalues.append( (self.master.insert( value ), ) + value  )
 
 		i = 0
 		for server in self.servers :
@@ -267,6 +413,26 @@ class Searcher :
 
 
 
+	def destroy( self ) :
+		def destroyDatabase( server ) :
+			# Source Start
 
+			fulltext = server['fulltext']
+			spatial = server['spatial']
 
+			fulltext.destroy()
+			spatial.destroy()
 
+		jobs = []
+
+		self.master.destroy()
+
+		for server in self.servers :
+			jobs.append(
+					Process( target = destroyDatabase, args = ( server, ) )
+			)
+
+		for job in jobs : job.start()
+		for job in jobs : job.join()
+
+		return True

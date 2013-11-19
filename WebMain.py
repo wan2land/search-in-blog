@@ -51,7 +51,7 @@ def ajaxSearchAddress() :
 @crossdomain(origin='*')
 def ajaxSearchResult() :
 
-	keyword = request.args.get("keyword", None)
+	keyword = request.args.get("keyword", None).encode("utf-8")
 	multi_spatial = request.args.get("multi_spatial", None)
 	spatial = request.args.get("spatial", None)
 	operate = request.args.get("operate", None)

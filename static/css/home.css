@@ -7,39 +7,48 @@ html, body {height:100%;}
 
 nav {
 	position:fixed;
-	left:50%;top:50px;
-	width:460px;height:50px;
-	margin-left:-240px;
+	left:0;top:0;
+	width:100%;height:50px;
 	background:rgba(255,255,255,.8);
-	border-radius:15px;
 	padding:10px;
 }
 nav > form {font-size:0;}
 
-nav > form > div.controller {display:inline-block;}
-nav > form > div.controller > label {display:none;}
-nav > form > div.controller > input,
-nav > form > div.controller > select {
+nav > form input,
+nav > form select {
 	height:50px;
 	line-height:20px;border-radius:5px;padding:6px 4px;font-size:14px;border:1px solid #ccc;box-sizing:border-box;-webkit-box-sizing:border-box;vertical-align:top;
 	text-align:center;
 }
-nav > form > div.controller-keyword > input {
+#SearchFormOperate {
+	width:161px;margin-right:10px;
+}
+
+#SearchFormKeyword {
 	width:150px;
-	border-top-right-radius:0;border-bottom-right-radius:0;
+}
+
+nav > form > div.controller-spatial {
+	display:inline-block;
+	vertical-align:top;
+	margin:0 20px;
 }
 
 nav > form > div.controller-spatial > input {
-	width:81px;margin-left:-1px;
-	border-radius:0;
+	width:80px;
+	border:1px solid #ccc;
+	margin-right:5px;
+}
+nav > form > div.controller-spatial > select {
+	margin-right:5px;
 }
 
-nav > form > div.controller-operate > select {
-	width:161px;margin-left:-1px;
-	border-radius:0;
+
+
+nav > form > select {
 }
 
-nav > form > div.controller > button {width:70px;font-size:13px;border:0;height:50px;border-radius:5px;color:#fff;background:#A6C7FD;border-top-left-radius:0;border-bottom-left-radius:0;vertical-align:top;}
+nav > form > button {width:70px;font-size:13px;border:0;height:50px;border-radius:5px;color:#fff;background:#A6C7FD;vertical-align:top;}
 
 #SearchFormAutocomplete {
 	position:absolute;

@@ -1,13 +1,13 @@
 from time import time
 
-gap = None
+gap = time()
 
-def checker() :
+def checker(msg = "Run..") :
 	global gap
-	if gap is None :
-		gap = time()
-		return
-
 	now = time()
-	print "Checker! : ", now - gap
+	print msg ,":", now - gap
 	gap = now
+
+def start() :
+	global gap
+	gap = time()

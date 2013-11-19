@@ -24,40 +24,41 @@ This web page has been developed by Wani.
 <nav>
 	<form method="post" action="/search" id="SearchForm">
 
-		<input type="hidden" name="multi_spatial" value="" />
+		<input type="hidden" name="formula" id="SearchFormFormula" value="" />
 
-		<div class="controller controller-keyword">
-			<label for="SearchFormKeyword">검색어</label>
-			<input type="text" name="keyword" id="SearchFormKeyword" autofocus required placeholder="검색어" />
-		</div>
-		<div class="controller controller-spatial">
-			<label for="SearchFormSpatial">지역</label>
-			<!-- union(+), difference(-), intersection(*)-->
-			<input type="text" name="spatial" id="SearchFormSpatial" required placeholder="지명" autocomplete="off" />
-		</div>
-		<div class="controller controller-operate">
-			<label for="SearchFormOperate">연산자</label>
-			<select name="operate" id="SearchFormOperate">
-				<option value="contains" selected>포함(Contains)</option>
-				<option value="cosses">가로지름(Crosses)</option>
-				<option value="disjoint">불포함(Disjoint)</option>
-				<option value="equals">같음(Equals)</option>
-				<option value="intersects">겹침(Intersects)</option>
-				<option value="overlaps">Overlaps</option>
-				<option value="touches">닿음(Touches)</option>
-				<option value="within">포함됨(Within)</option>
+		<select name="operate" id="SearchFormOperate">
+			<option value="contains" selected>포함(Contains)</option>
+			<option value="cosses">가로지름(Crosses)</option>
+			<option value="disjoint">불포함(Disjoint)</option>
+			<option value="equals">같음(Equals)</option>
+			<option value="intersects">겹침(Intersects)</option>
+			<option value="overlaps">Overlaps</option>
+			<option value="touches">닿음(Touches)</option>
+			<option value="within">포함됨(Within)</option>
+		</select>
+
+		<input type="text" name="keyword" id="SearchFormKeyword" autofocus placeholder="검색어" />
+
+		<!-- union(+), difference(-), intersection(*)-->
+		<div class="controller controller-spatial" id="SearchFormSpatial">
+			<input type="text" name="spatial[]" autocomplete="off" required placeholder="지명" class="spatial-name" />
+			<select name="operator[]" class="spatial-operator">
+				<option value="none">---</option>
+				<option value="union">+</option>
+				<option value="differnce">-</option>
+				<option value="intersection">*</option>
 			</select>
 		</div>
-		<div class="controller controller-submit">
-			<button type="submit">검색</button>
-		</div>
-		<div id="SearchFormAutocomplete"><ul></ul></div>
+		<button type="submit">검색</button>
 	</form>
+	<div id="SearchFormAutocomplete"><ul></ul></div>
 </nav>
 
 
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="{{ url_for('static', filename="js/jquery.autocomplete.min.js") }}"></script>
+<script src="{{ url_for('static', filename="js/extra-form.min.js") }}"></script>
 <script src="{{ url_for('static', filename="js/home.min.js") }}"></script>
 </body>
 </html>

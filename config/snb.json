@@ -16,5 +16,35 @@
 		"user" : "root",
 		"password" : "1234",
 		"dbname" : "mydb"
+	},
+	{
+		"host" : "192.168.0.35",
+		"user" : "root",
+		"password" : "1234",
+		"dbname" : "mydb"
+	},
+	{
+		"host" : "192.168.0.41",
+		"user" : "root",
+		"password" : "1234",
+		"dbname" : "mydb"
+	},
+	{
+		"host" : "192.168.0.37",
+		"user" : "root",
+		"password" : "1234",
+		"dbname" : "mydb"
+	},
+	{
+		"host" : "192.168.0.38",
+		"user" : "root",
+		"password" : "1234",
+		"dbname" : "mydb"
+	},
+	{
+		"host" : "192.168.0.40",
+		"user" : "root",
+		"password" : "1234",
+		"dbname" : "mydb"
 	}
 ]

@@ -1,4 +1,4 @@
-;(function($){
+;(function($, g){
 
 	var
 	map,
@@ -13,61 +13,22 @@
 			mapTypeId: google.maps.MapTypeId.ROADMAP,
 			disableDoubleClickZoom : true
 		});
-
-		/*
-		google.maps.event.addListener(map, "dblclick", function ( e ){
-			console.log( e.latLng.lat(), e.latLng.lng() );
-		});
-		google.maps.event.addListener(map, "zoom_changed", function(){
-			//console.log(map.getZoom());
-			// 7~10 -> 서울시 부산시, 시단위로..
-			// 11~13 -> 구단위
-			// 14~ -> 동단위..
-		});
-		google.maps.event.addListener(map, "mousemove", function( e ) {
-			//console.log( e.latLng.lat(), e.latLng.lng() );
-		});
-		*/
 	};
 
 
 
-	var
-	$SearchFormAutocomplete = $( "#SearchFormAutocomplete" )
-	;
-	var autocompleteSpatial = function( keyword ) {
-		$.ajax({
-			type : "GET",
-			url : "http://localhost:5000/ajax/searchAddress",
-			data : { keyword : keyword },
-			success : function( data ) {
-				if (data.result == false)
-					return
-				if (data.result.length == 0)
-					return
+	var $SearchFormSpatial = $("#SearchFormSpatial");
+	var $SearchFormFormula = $( "#SearchFormFormula");
+	var $SearchFormAutocomplete = $( "#SearchFormAutocomplete" );
 
-				var result;
-				for (var i = 0, len = data.result.length; i < len ; i++) {
-					var location = data.result[i];
-					result += "<li data-idx=\""+location.idx+"\">"+location.name+" ("+location.address+")</li>";
-				}
+	var $recentSpatialForm = null;
 
-				$SearchFormAutocomplete.find('ul').html(result);
-
-			}
-
-		});
-	};
-
-
-
+	//Location Polygon Loading!!
 	var selectLocationLoading = false;
 	var recentPolygon = null;
 	var selectLocation = function(idx) {
 		if (selectLocationLoading) return;
 		selectLocationLoading = true;
-
-		$( '[name=multi_spatial]' ).val(idx);
 
 		$.ajax({
 			type : "GET",
@@ -122,8 +83,23 @@
 
 		});
 	};
+
+
+	var formulaRefresh = function() {
+		console.log( $SearchFormSpatial.find('input.spatial-name') );
+	};
+//SearchFormFormula
 	$SearchFormAutocomplete.find('ul').on("click", "li", function() {
-		selectLocation( $(this).data('idx') );
+		var idx = $(this).data('idx');
+
+		$recentSpatialForm.data('idx', idx);
+		$recentSpatialForm.val( $(this).data('name') );
+
+		$SearchFormAutocomplete.find('ul').empty();
+
+		formulaRefresh();
+
+		selectLocation( idx );
 	});
 
 
@@ -147,10 +123,19 @@
 
 		});		
 	});
-	$( '#SearchFormSpatial' ).bind("keyup", function() {
-		autocompleteSpatial( $(this).val() );
+
+	$SearchFormSpatial.on("keyup", "input", function() {
+		$recentSpatialForm = $(this);
+		var keyword = $(this).val();
+		$SearchFormAutocomplete.css("left", $(this).offset().left );
+		g.autocompleteSpatial( keyword );
+	});
+	var spatial_append_context = $SearchFormSpatial.html();
+	$SearchFormSpatial.on("change", "select", function() {
+		if ( $(this).find('option:selected').val() === "none" ) return;
+		$SearchFormSpatial.append( $SearchFormSpatial.html() );
 	});
 
 	initialize();
 
-})(jQuery);
+})(jQuery, window);

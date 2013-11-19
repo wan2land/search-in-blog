@@ -7,15 +7,41 @@ from shapely.geometry import *
 from SnbDistrubuteSearcher import Searcher
 from Module.RandomText import RandomText
 import Config
+import Module.PySql as PySql
 
-#1. instance = Searcher( name, **db_config )
+#Init
+searcher = Searcher( "blogs", Config.fromJson("snb.json") )
+#searcher.destroy()
+#searcher.init()
 
-inst = Searcher( "new", Config.fromJson("snb.json") )
+docs = PySql.connect(host = "localhost", user = "root", password = "rooroo123", dbname="siblo")
+result = docs.query("""SELECT * FROM `blogorder`""")
+
+Timer.checker()
+
+
+dummy = []
+i = 0
+for item in result.fetchall() :
+	title = item[0]
+	contents = item[2]
+	latlng = Point(float(item[4]),float(item[3]))
+	url = item[5]
+
+	dummy.append( (latlng, contents, {
+		'title' : title,
+		'url' : url
+	}) )
+
+	if i % 30 == 0 :
+		searcher.insert(*dummy)
+		dummy = []
+	i = i+1
+
+Timer.checker()
 
 #2. instance.insert( Shapely, documents )
-#inst.destroy()
-#exit()
-
+"""
 rt = RandomText()
 
 Timer.checker()
@@ -45,3 +71,4 @@ for item in result :
 	print item[1]
 	if len(item) > 2 :
 		print item[2]
+"""
