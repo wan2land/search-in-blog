@@ -51,10 +51,8 @@ Made by Seo.daehyun
 		var basket = [];
 		var head = text.indexOf("(");
 		var geoString = text.substring(head+1,text.length-1);
-		var pivot = geoString.indexOf(",");
-		var lng = geoString.substring(0,pivot);
-		var lat = geoString.substring(pivot+1,geoString.length);
-		basket.push(parseFloat(lat),parseFloat(lng));
+		var xy = trim(geoString).split(" ");
+		basket.push(parseFloat(xy[1]),parseFloat(xy[0]));
 		return {
 			"type": "Point",
 			"coordinates": basket

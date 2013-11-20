@@ -19,7 +19,7 @@ from Geo.Converter import text2geo, geo2text
 
 app = Flask(__name__)
 searcher = None
-searcher = Searcher( "blogs", Config.fromJson("snb.json"))
+searcher = Searcher( "blogs", Config.fromJson("web.json"), fulltext = False)
 
 #url_for("static", filename="style.css")
 
@@ -112,12 +112,11 @@ def ajaxSearchResult() :
 	
 	result = searcher.search(operator, polygon, keyword, option="all")
 
-	print result
-
+	#print ([(item[0],item[2]['title'],item[2]['url']) for item in result[0:10]])
 	#if isinstance(result, (list, tuple)) and len(result) == 0 :
 	#	return retError()
 
-	return jsonify( result = result )
+	return jsonify( result = [(item[0],item[2]['title'],item[2]['url']) for item in result] )
 
 
 @app.errorhandler(404)

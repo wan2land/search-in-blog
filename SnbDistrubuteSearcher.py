@@ -129,11 +129,21 @@ class MySpatial :
 		return True
 
 	def search(self, operator, shapely) :
+		operator_map = dict(
+			contains = 		"ST_Contains",
+			crosses = 		"ST_Crosses",
+			disjoint = 		"ST_Disjoint",
+			equals = 		"ST_Equals",
+			intersects = 	"ST_Intersects",
+			overlaps = 		"ST_Overlaps",
+			touches = 		"ST_Touches",
+			within = 		"ST_Within"
+		)
 
 		ret = Converter.geo2text( shapely )
 		
 		stmt = self.connector.query("""SELECT `document_idx` FROM `%s` WHERE %s(GeomFromText('%s'), `g`)"""
-				% (self.name + "_spatial", operator, ret) )
+				% (self.name + "_spatial", operator_map[operator], ret) )
 		
 		result = [ int(x[0]) for x in stmt.fetchall() ]
 
