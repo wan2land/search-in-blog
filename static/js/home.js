@@ -101,14 +101,32 @@ google.maps.Polygon.prototype.my_getBounds=function(){
 							}
 						}
 						else{
+							// ???
 							recentPolygon[i].setMap(map);
+							recentPolygon[i].setOptions({
+								strokeColor: '#165724',
+								strokeOpacity: 0.8,
+								strokeWeight: 3,
+								fillColor: '#54f380',
+								fillOpacity: 0.35,
+								map : map
+							});
 						}
 					}
 				}
 				else{
+					// Polygon!
 					recentPolygon.setMap(map)
+					recentPolygon.setOptions({
+						strokeColor: '#165724',
+						strokeOpacity: 0.8,
+						strokeWeight: 3,
+						fillColor: '#54f380',
+						fillOpacity: 0.35,
+						map : map
+					});
 				}
-
+				console.log(recentPolygon);
 				selectLocationLoading = false;
 
 			}
@@ -125,6 +143,9 @@ google.maps.Polygon.prototype.my_getBounds=function(){
 			var spatial_loc = spatial_group.find('input.spatial-name').data('idx');
 			var spatial_operator = spatial_group.find('select.spatial-operator').find('option:selected').val();
 
+			if (typeof spatial_loc === "undefined") {
+				continue;
+			}
 			formula += spatial_loc;
 			formula += spatial_operator;
 
@@ -154,12 +175,20 @@ google.maps.Polygon.prototype.my_getBounds=function(){
 
 	$( '#SearchForm' ).bind("submit", function( e ) {
 		e.preventDefault();
+
+		var formula = getFormula();
+		if (formula === "") {
+			alert("장소를 지정하셔야 합니다.");
+			$('input.spatial-name').eq(0).focus();
+			return;
+		}
+
 		$.ajax({
 			type : "GET",
 			url : "http://localhost:5000/ajax/searchResult",
 			data : {
 				"operator" : $('#SearchFormOperate').find('option:selected').val(),
-				"formula" : getFormula(),
+				"formula" : formula,
 				"keyword" : $("#SearchFormKeyword").val()
 			},
 			success : function( data ) {
