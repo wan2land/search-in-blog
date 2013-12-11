@@ -2,6 +2,13 @@
 import SnbLibrary
 import shapely
 
+"""
+원래 내장될 RTree 자료구조 였으나, MySQL자체 rtree 성능이 더 강력해서 그냥 사용안함. [...]
+아마 MySQL이 아니라 자체 Python Pure NoSQL사용한다면 생각보다 강력하게 쓰일 수도 있을거 같아 그냥 남겨둠.
+
+첨1. fulltext의 경우, MySQL 자체 fulltext보다 우리가 만든 Module.Fulltext가 더 성능이 좋아서 사용했다..
+첨2. 예제로 구현해보고자 한다면 Tkinter모듈 설치 후, python RTree.py 실행하면 된다. 그러면 gui환경에서 테스트내용이 돌아간다.
+"""
 
 
 class Rect :

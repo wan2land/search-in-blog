@@ -6,6 +6,17 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPolygon
 
+"""
+MySQL에서 가져온 Geometry는 text타입. 또 ajax를 통해 가져온 공간정보도 text타입.
+그러나 실제 연산에서 사용되는건 shapely타입..
+
+이 두 과정사이에서 필연적으로 파싱이란 과정이 필요했고,
+이를 두개의 함수로 만들었다.
+text2geo, geo2text.
+나머지 함수들은 이 두개를 위한 함수라고 보면됨.
+에러 발생시 Exception 발생.
+"""
+
 class geoTypeError(Exception):	# 지원하는 Geometry 타입이 아닌 경우
 	def __init__(self, str):
 		self.str = str

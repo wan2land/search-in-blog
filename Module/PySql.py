@@ -1,5 +1,12 @@
+# -*- coding:utf-8 -*-
 import MySQLdb
 import MySQLdb.cursors
+
+"""
+MySQLdb 모듈이 조금 복잡하게 사용되는 것 같아, 조금 더 간단한 인터페이스로 제작한 래퍼 모듈(Wrapper Module).
+tableExists는 해당 테이블이 현재 db에 존재하는지 확인하고, getAutoIncrement는 현제 테이블에서 앞으로 사용될
+autoincrement값을 가져온다.
+"""
 
 #for Caching!
 connect_pool = {}

@@ -8,9 +8,16 @@ from Module.LimTokenizer import LimTokenizer, ords
 from multiprocessing import Process, Queue
 from random import randint
 
+"""
+Searcher Class안에 insert, search 메서드의 경우 안에서 process를 사용해서 내부 함수를 실행하는 부분을 볼 수 있습니다.
+원래 해당 내용은 parallel이라는 라이브러리를 사용해서 원격으로 실행하였습니다. 그런데 해당 컴퓨터에서 MySQL을 수행하는 부분이 대부분이라
+오히려 Main컴퓨터에서 멀티프로세스로 처리하고 db query만 원격으로 실행하는게 더 성능이 낫다는 판단이 들어서 싹 드러내고 수정하였습니다.
 
+아마 Python Pure NoSQL로 대치된다면 insert, search라는 메서드가 데몬안에서 돌아가도록 하면 조금더 성능향상이 기대 되는 부분입니다.
+(사족, Lucene은 자체 파일처리만을 지원하는데 아마 이런 부분이 강점인 것 같습니다.)
+"""
 
-
+# error발생시 exception으로 바꿔줌
 warnings.filterwarnings('error')
 
 

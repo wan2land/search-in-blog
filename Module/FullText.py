@@ -1,14 +1,17 @@
 # -*- coding:utf-8 -*-
-import Module.PySql as PySql
 import inspect
 
 import Geo.Converter as Converter
 import Module.PySql as PySql
-#import time
+
 
 """
 Search'n Blog Project
 Snb Connector, Mysql 활용하여.. 만듦.
+
+공간문서검색에서 문서검색에 해당하는 부분.
+각 문서당 테이블을 3개 생성하여서 사용함. 나머지 2개에는 인덱스와 토큰들을 저장하여서 효율을 끌어올림.
+실제로 성능평가 해보면 (캐쉬를 사용하지 않는다면..) 적은 숫자에서는 성능이 낮지만, 갯수가 많아질 수록 일반 fulltext보다 결과가 빨라짐.
 """
 
 class SnbException(Exception):	# 지원하는 Geometry 타입이 아닌 경우

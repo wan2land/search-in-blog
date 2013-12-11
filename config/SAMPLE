@@ -1,0 +1,31 @@
+config파일은 다음과 같이 정의됨.
+
+```lang-json
+[
+	{
+		"host" : "ip"
+		"user" : "해당sql 계정",
+		"password" : "해당sql 비밀번호",
+		"dbname" : "사용할 dbname"
+	}
+]
+```
+
+만약 분산으로 사용하고자 하면 그냥 여러번 반복해서 넣어주면 된다.
+
+```lang-json
+[
+	{
+		"host" : "ip"
+		"user" : "해당sql 계정",
+		"password" : "해당sql 비밀번호",
+		"dbname" : "사용할 dbname"
+	},
+	{
+		"host" : "ip"
+		"user" : "해당sql 계정",
+		"password" : "해당sql 비밀번호",
+		"dbname" : "사용할 dbname"
+	}
+]
+```

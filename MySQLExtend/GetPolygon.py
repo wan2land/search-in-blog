@@ -4,7 +4,20 @@ import re
 from decimal import *
 from shapely.geometry import Polygon
 import Module.PySql as PySql
-# use this, brew install geos / sudo apt-get install libgeos-dev
+
+"""
+해당 모듈을 사용하기 위해서는 
+맥의 경우 brew install geos
+리눅스의 경우 sudo apt-get install libgeos-dev
+를 설치하고 난 후 사용할 수 있다.
+
+물론 shapely 설치는 기본..
+
+이 모듈은 웹에서 주소 입력할 때 해당하는 폴리곤을 검색하는 것. 초반에는 전체 함수 의존도가 컸으나
+이후에는 다른 더 좋은 잘 짠 소스로 대체되면서 searchFromAll, searchByIdx, parseGeometry
+요거 3개의 메서드만 사용하게 됨.
+사실 parseGeometry의 경우도 Geo.Converter 모듈이 더 사용하기 좋음.
+"""
 
 conn = PySql.connect( **Config.fromJson("snb.json")[0] ).getConnector()
 

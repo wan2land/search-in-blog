@@ -1,4 +1,8 @@
+# -*- coding:utf-8 -*-
 from time import time
+"""
+그냥 디버깅이랑 벤치마크 측정을 위한 모듈.
+"""
 
 gap = time()
 

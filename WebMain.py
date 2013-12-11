@@ -16,7 +16,6 @@ from Jamo import divText
 from Geo.Converter import text2geo, geo2text
 
 
-
 app = Flask(__name__)
 searcher = None
 searcher = Searcher( "blogs", Config.fromJson("web.json"), fulltext = False)

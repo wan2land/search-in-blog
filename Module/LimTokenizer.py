@@ -1,6 +1,11 @@
 # -*- coding:utf-8 -*-
 import re
-
+"""
+FullText Module안에 들어있는 Standard Tokenizer를 대신할 수 있도록 만듦.
+실제 문서에 너무 escape해야할 문자가 너무 많고 한글, 영어를 제외한 나머지는 처리할 필요 없도록 제작.
+interface에서 요구하는 함수 자체가 doit()이었음. LimTokenizer.doit(text) 호출 시,
+텍스트에서 토큰을 분리해서 이터레이터를 통해 하나씩 내보내 줌.
+"""
 class LimTokenizer :
 	@staticmethod
 	def doit(text) :

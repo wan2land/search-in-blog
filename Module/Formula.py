@@ -1,4 +1,8 @@
 # -*- coding:utf-8 -*-
+"""
+웹에서 검색결과가 312+134*1234 이런식으로 들어옴.
+이 식을 파싱하는 모듈.
+"""
 
 def parser( formula ) :
 	operators = list('+-*/=')
